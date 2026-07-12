@@ -34,23 +34,8 @@ export function Header() {
         <h2 className="font-display font-bold text-on-surface tracking-tight">{page.title}</h2>
       </div>
 
-      {/* User info */}
+      {/* Right side is kept blank to unify profile view in the sidebar */}
       <div className="flex items-center gap-3">
-        {user && (
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex flex-col items-end">
-              <span className="text-sm font-bold text-on-surface">
-                {user.name || user.email || 'User'}
-              </span>
-              <span className={`text-xs px-2 py-0.5 rounded-full border font-semibold ${badgeClass}`}>
-                {user.roleLabel}
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-primary text-[18px]">person</span>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   )

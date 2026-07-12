@@ -1,4 +1,7 @@
+import { useTheme } from '../contexts/ThemeContext'
+
 export function AuthLayout({ children }) {
+  const { theme, toggleTheme } = useTheme()
   return (
     <div className="min-h-screen flex bg-background text-on-surface overflow-hidden">
       {/* Left panel - Branding */}
@@ -10,10 +13,8 @@ export function AuthLayout({ children }) {
         {/* Brand */}
         <div className="z-10">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-              <span className="material-symbols-outlined text-on-primary text-xl" style={{ fontVariationSettings: "'FILL' 1" }}>
-                local_shipping
-              </span>
+            <div className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0">
+              <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <h1 className="font-display font-black text-2xl tracking-tighter text-on-surface">TransitOps</h1>
           </div>
@@ -47,12 +48,23 @@ export function AuthLayout({ children }) {
 
       {/* Right panel - Form */}
       <section className="flex-1 bg-background flex flex-col justify-center px-6 md:px-16 h-screen relative">
+        {/* Theme Toggle Switch */}
+        <div className="absolute top-6 right-6">
+          <button
+            onClick={toggleTheme}
+            className="w-10 h-10 flex items-center justify-center rounded-lg border border-outline-variant hover:bg-surface-container transition-colors"
+            title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+          >
+            <span className="material-symbols-outlined text-[20px] text-on-surface">
+              {theme === 'light' ? 'dark_mode' : 'light_mode'}
+            </span>
+          </button>
+        </div>
+
         {/* Mobile branding */}
         <div className="md:hidden flex items-center gap-2 mb-8 justify-center">
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center">
-            <span className="material-symbols-outlined text-on-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              local_shipping
-            </span>
+          <div className="w-10 h-10 rounded-lg flex items-center justify-center shadow-sm overflow-hidden flex-shrink-0">
+            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <span className="font-display font-black text-xl text-on-surface">TransitOps</span>
         </div>

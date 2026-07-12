@@ -43,10 +43,8 @@ export function Sidebar() {
       {/* Brand Header */}
       <div className="px-6 py-5 border-b border-outline-variant/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center flex-shrink-0">
-            <span className="material-symbols-outlined text-on-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              local_shipping
-            </span>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="font-display font-black text-base tracking-tighter text-on-surface">TransitOps</h1>
