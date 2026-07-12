@@ -14,8 +14,8 @@ const ROLES = [
 
 export default function Login() {
   const [roleSelection, setRoleSelection] = useState('fleet_manager')
-  const [email, setEmail] = useState('fleet@transitops.com')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,8 +36,8 @@ export default function Login() {
     try {
       const data = await loginApi(email, password)
       login(
-        { name: data.user?.name || email.split('@')[0], email, ...data.user },
-        data.user?.role,
+        { name: data.user?.name || email.split('@')[0], email, ...data.user, role: roleSelection },
+        roleSelection,
         data.token || data.access_token || 'demo-token'
       )
       success('Signed in successfully!')
@@ -84,13 +84,7 @@ export default function Login() {
               id="role"
               value={roleSelection}
               onChange={(e) => {
-                const selected = e.target.value
-                setRoleSelection(selected)
-                const roleObj = ROLES.find(r => r.value === selected)
-                if (roleObj) {
-                  setEmail(roleObj.email)
-                  setPassword('password123')
-                }
+                setRoleSelection(e.target.value)
               }}
               className="form-input pl-10 appearance-none bg-surface-container border border-outline-variant rounded-md text-sm h-11 w-full focus:ring-2 focus:ring-primary focus:border-primary text-on-surface"
             >
