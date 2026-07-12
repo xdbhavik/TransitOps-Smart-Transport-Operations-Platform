@@ -3,13 +3,13 @@ package com.Transitops.odoo.controller;
 import com.Transitops.odoo.dto.request.DriverRequest;
 import com.Transitops.odoo.dto.response.DriverAvailabilityResponse;
 import com.Transitops.odoo.dto.response.DriverResponse;
+import com.Transitops.odoo.dto.response.LicenseReminderResponse;
 import com.Transitops.odoo.dto.response.LicenseStatusResponse;
 import com.Transitops.odoo.enums.DriverStatus;
 import com.Transitops.odoo.service.DriverService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +23,6 @@ public class DriverController {
     private final DriverService driverService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SAFETY_OFFICER', 'ADMIN')")
     public ResponseEntity<DriverResponse> registerDriver(@RequestBody DriverRequest request) {
         DriverResponse response = driverService.registerDriver(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -40,13 +39,11 @@ public class DriverController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SAFETY_OFFICER', 'ADMIN')")
     public ResponseEntity<DriverResponse> updateDriver(@PathVariable String id, @RequestBody DriverRequest request) {
         return ResponseEntity.ok(driverService.updateDriver(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SAFETY_OFFICER', 'ADMIN')")
     public ResponseEntity<Void> deleteDriver(@PathVariable String id) {
         driverService.deleteDriver(id);
         return ResponseEntity.noContent().build();
@@ -85,5 +82,10 @@ public class DriverController {
     @GetMapping("/{id}/license-status")
     public ResponseEntity<LicenseStatusResponse> checkLicenseStatus(@PathVariable String id) {
         return ResponseEntity.ok(driverService.checkLicenseStatus(id));
+    }
+
+    @PostMapping("/license-reminders/send")
+    public ResponseEntity<LicenseReminderResponse> sendLicenseReminders() {
+        return ResponseEntity.ok(driverService.sendLicenseExpiryReminders());
     }
 }

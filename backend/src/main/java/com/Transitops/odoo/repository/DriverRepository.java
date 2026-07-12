@@ -16,4 +16,5 @@ public interface DriverRepository extends JpaRepository<Driver, String> {
     Optional<Driver> findByPhone(String phone);
     List<Driver> findByStatus(DriverStatus status);
     List<Driver> findByLicenseExpiryDateLessThanEqual(LocalDate date);
+    List<Driver> findByLicenseExpiryDateBetween(LocalDate startDate, LocalDate endDate);
 }

@@ -1,7 +1,6 @@
-package com.Transitops.odoo.dto.request;
+package com.Transitops.odoo.dto.response;
 
 import com.Transitops.odoo.enums.ExpenseType;
-import com.fasterxml.jackson.annotation.JsonAlias;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -9,28 +8,21 @@ import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class ExpenseRequest {
+public class ExpenseResponse {
 
-    @JsonAlias({"vehicleId", "vehicle_id"})
+    private String id;
     private String vehicleId;
-
-    @JsonAlias({"tripId", "trip_id"})
     private String tripId;
-
-    @JsonAlias({"expenseType", "expense_type"})
     private ExpenseType expenseType;
-
-    @JsonAlias({"amount"})
     private BigDecimal amount;
-
-    @JsonAlias({"description"})
     private String description;
-
-    @JsonAlias({"expenseDate", "expense_date"})
     private LocalDate expenseDate;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 }
