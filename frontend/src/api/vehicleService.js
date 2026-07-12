@@ -71,3 +71,26 @@ export const retireVehicle = async (id) => {
 export const getAvailableVehicles = async () => {
   return getVehicles({ status: 'Available' })
 }
+
+export const uploadVehicleDocument = async (id, fileObj) => {
+  await new Promise(resolve => setTimeout(resolve, 600))
+  const list = mockDb.getVehicles()
+  const idx = list.findIndex(v => String(v.id) === String(id))
+  if (idx === -1) throw new Error('Vehicle not found')
+
+  const doc = {
+    id: Date.now(),
+    name: fileObj.name || 'document.pdf',
+    type: fileObj.type || 'application/pdf',
+    size: fileObj.size || 1024,
+    upload_date: new Date().toISOString().split('T')[0]
+  }
+
+  const updated = {
+    ...list[idx],
+    documents: [...(list[idx].documents || []), doc]
+  }
+  list[idx] = updated
+  mockDb.saveVehicles(list)
+  return updated
+}

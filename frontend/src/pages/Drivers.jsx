@@ -232,7 +232,7 @@ export default function Drivers() {
         </div>
       </PageHeader>
 
-      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No drivers found" emptyIcon="badge" />
+      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No drivers found" emptyIcon="badge" pageSize={5} />
 
       {/* Add/Edit Modal */}
       <Modal isOpen={modalMode === 'add' || modalMode === 'edit'} onClose={closeModal} title={modalMode === 'add' ? 'Add Driver Profile' : 'Edit Driver'}>

@@ -7,13 +7,13 @@ import {
   BarChart, Bar, XAxis, YAxis, CartesianGrid, Legend
 } from 'recharts'
 
-const VEHICLE_STATUS_COLORS = ['#34d399', '#a78bfa', '#a1a1aa', '#ef4444']
-const TRIP_STATUS_COLORS = ['#71717a', '#a78bfa', '#34d399', '#ef4444']
+const VEHICLE_STATUS_COLORS = ['#f9a66c', '#4a6163', '#ffc94b', '#f17a7e']
+const TRIP_STATUS_COLORS = ['#ffc94b', '#4a6163', '#f9a66c', '#f17a7e']
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
     return (
-      <div className="bg-surface-container-highest border border-outline-variant rounded-lg px-3 py-2 text-xs">
+      <div className="bg-surface-container border border-outline-variant rounded-lg px-3 py-2 text-xs">
         {label && <p className="text-on-surface-variant mb-1">{label}</p>}
         {payload.map((p, i) => (
           <p key={i} className="font-semibold" style={{ color: p.fill || p.color }}>
@@ -49,7 +49,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     fetchStats()
-  }, [])
+  }, [filters])
 
   const getDemoStats = () => ({
     activeVehicles: 53,
@@ -200,19 +200,19 @@ export default function Dashboard() {
             <div className="flex-1 min-h-[260px]">
               <ResponsiveContainer width="100%" height={260}>
                 <BarChart data={stats.tripStatusBreakdown} margin={{ top: 8, right: 8, left: -20, bottom: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+                  <CartesianGrid strokeDasharray="3 3" stroke="#e1e4db" vertical={false} />
                   <XAxis
                     dataKey="name"
-                    tick={{ fill: '#a1a1aa', fontSize: 12 }}
-                    axisLine={{ stroke: '#27272a' }}
+                    tick={{ fill: '#73796e', fontSize: 12 }}
+                    axisLine={{ stroke: '#e1e4db' }}
                     tickLine={false}
                   />
                   <YAxis
-                    tick={{ fill: '#a1a1aa', fontSize: 12 }}
+                    tick={{ fill: '#73796e', fontSize: 12 }}
                     axisLine={false}
                     tickLine={false}
                   />
-                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#1e1e22' }} />
+                  <Tooltip content={<CustomTooltip />} cursor={{ fill: '#eef0e9' }} />
                   <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                     {stats.tripStatusBreakdown?.map((entry, index) => (
                       <Cell

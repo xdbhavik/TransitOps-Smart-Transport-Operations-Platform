@@ -257,7 +257,7 @@ export default function Trips() {
         </select>
       </PageHeader>
 
-      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No trips found" emptyIcon="route" />
+      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No trips found" emptyIcon="route" pageSize={5} />
 
       {/* Create Trip Modal */}
       <Modal isOpen={modalMode === 'create'} onClose={closeModal} title="Create New Trip">

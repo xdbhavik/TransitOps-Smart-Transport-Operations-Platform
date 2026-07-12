@@ -13,6 +13,9 @@ export const getDashboardStats = async (filters = {}) => {
   if (filters.vehicleStatus) {
     vehicles = vehicles.filter(v => v.status === filters.vehicleStatus)
   }
+  if (filters.region) {
+    vehicles = vehicles.filter(v => v.region && v.region.toLowerCase() === filters.region.toLowerCase())
+  }
 
   const activeVehicles = vehicles.filter(v => v.status === 'On Trip').length
   const availableVehicles = vehicles.filter(v => v.status === 'Available').length

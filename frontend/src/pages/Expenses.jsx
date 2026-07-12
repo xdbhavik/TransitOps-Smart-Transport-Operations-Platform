@@ -131,7 +131,7 @@ export default function Expenses() {
         </div>
       </PageHeader>
 
-      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No expenses found" emptyIcon="receipt_long" />
+      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No expenses found" emptyIcon="receipt_long" pageSize={5} />
 
       {/* Per-vehicle summary */}
       {Object.keys(vehicleSummary).length > 0 && (
