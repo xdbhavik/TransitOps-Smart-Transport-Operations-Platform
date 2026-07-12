@@ -6,6 +6,7 @@ const ROLE_LABELS = {
   admin: 'Admin',
   fleet_manager: 'Fleet Manager',
   driver: 'Driver',
+  dispatcher: 'Driver',
   safety_officer: 'Safety Officer',
   financial_analyst: 'Financial Analyst',
 }
@@ -26,7 +27,7 @@ export function AuthProvider({ children }) {
       try {
         setToken(storedToken)
         setUser(JSON.parse(storedUser))
-        setRole(storedRole)
+        setRole(storedRole === 'dispatcher' ? 'driver' : storedRole)
         setIsAuthenticated(true)
       } catch {
         clearAuth()
@@ -36,17 +37,19 @@ export function AuthProvider({ children }) {
   }, [])
 
   const login = (userData, userRole, userToken) => {
+    const normalizedRole = userRole === 'dispatcher' ? 'driver' : userRole
     const userObj = {
       ...userData,
-      roleLabel: ROLE_LABELS[userRole] || userRole,
+      role: normalizedRole,
+      roleLabel: ROLE_LABELS[normalizedRole] || normalizedRole,
     }
     setUser(userObj)
-    setRole(userRole)
+    setRole(normalizedRole)
     setToken(userToken)
     setIsAuthenticated(true)
     localStorage.setItem('transitops_token', userToken)
     localStorage.setItem('transitops_user', JSON.stringify(userObj))
-    localStorage.setItem('transitops_role', userRole)
+    localStorage.setItem('transitops_role', normalizedRole)
   }
 
   const logout = () => {

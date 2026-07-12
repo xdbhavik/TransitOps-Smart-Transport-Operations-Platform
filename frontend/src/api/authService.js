@@ -1,6 +1,9 @@
 import axiosInstance from './axiosInstance'
 
-const normalizeRole = (roleName) => String(roleName || '').toLowerCase()
+const normalizeRole = (roleName) => {
+  const normalized = String(roleName || '').toLowerCase()
+  return normalized === 'dispatcher' ? 'driver' : normalized
+}
 
 export const loginApi = async (email, password) => {
   const { data } = await axiosInstance.post('/auth/login', {
