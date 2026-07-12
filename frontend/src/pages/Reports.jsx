@@ -71,11 +71,11 @@ export default function Reports() {
         <h3 className="font-bold text-on-surface mb-4">Fuel Efficiency by Vehicle (km/L)</h3>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={currentData} margin={{ left: -10, right: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-            <XAxis dataKey="vehicle" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#1e1e22' }} />
-            <Bar dataKey="efficiency" name="km/L" fill="#34d399" fillOpacity={0.8} radius={[4, 4, 0, 0]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e1e4db" vertical={false} />
+            <XAxis dataKey="vehicle" tick={{ fill: '#73796e', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#73796e', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#eef0e9' }} />
+            <Bar dataKey="efficiency" name="km/L" fill="#4a6163" fillOpacity={0.8} radius={[4, 4, 0, 0]} />
           </BarChart>
         </ResponsiveContainer>
       </div>
@@ -106,11 +106,11 @@ export default function Reports() {
         <h3 className="font-bold text-on-surface mb-4">Fleet Utilization Over Time (%)</h3>
         <ResponsiveContainer width="100%" height={280}>
           <LineChart data={currentData} margin={{ left: -10, right: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-            <XAxis dataKey="period" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e1e4db" vertical={false} />
+            <XAxis dataKey="period" tick={{ fill: '#73796e', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#73796e', fontSize: 11 }} axisLine={false} tickLine={false} domain={[0, 100]} />
             <Tooltip content={<CustomTooltip />} />
-            <Line type="monotone" dataKey="utilization" name="Utilization %" stroke="#a78bfa" strokeWidth={2} dot={{ fill: '#a78bfa', r: 4 }} activeDot={{ r: 6 }} />
+            <Line type="monotone" dataKey="utilization" name="Utilization %" stroke="#f9a66c" strokeWidth={2} dot={{ fill: '#f9a66c', r: 4 }} activeDot={{ fill: '#4a6163', r: 6 }} />
           </LineChart>
         </ResponsiveContainer>
       </div>
@@ -123,12 +123,12 @@ export default function Reports() {
         <h3 className="font-bold text-on-surface mb-4">Operational Cost by Vehicle ($)</h3>
         <ResponsiveContainer width="100%" height={280}>
           <BarChart data={currentData} margin={{ left: -10, right: 10 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
-            <XAxis dataKey="vehicle" tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <YAxis tick={{ fill: '#a1a1aa', fontSize: 11 }} axisLine={false} tickLine={false} />
-            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#1e1e22' }} />
-            <Bar dataKey="fuel_cost" name="Fuel Cost" fill="#a78bfa" fillOpacity={0.7} radius={[0, 0, 0, 0]} stackId="a" />
-            <Bar dataKey="maintenance_cost" name="Maintenance" fill="#ef4444" fillOpacity={0.7} radius={[4, 4, 0, 0]} stackId="a" />
+            <CartesianGrid strokeDasharray="3 3" stroke="#e1e4db" vertical={false} />
+            <XAxis dataKey="vehicle" tick={{ fill: '#73796e', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <YAxis tick={{ fill: '#73796e', fontSize: 11 }} axisLine={false} tickLine={false} />
+            <Tooltip content={<CustomTooltip />} cursor={{ fill: '#eef0e9' }} />
+            <Bar dataKey="fuel_cost" name="Fuel Cost" fill="#f9a66c" fillOpacity={0.8} radius={[0, 0, 0, 0]} stackId="a" />
+            <Bar dataKey="maintenance_cost" name="Maintenance" fill="#f17a7e" fillOpacity={0.8} radius={[4, 4, 0, 0]} stackId="a" />
           </BarChart>
         </ResponsiveContainer>
       </div>

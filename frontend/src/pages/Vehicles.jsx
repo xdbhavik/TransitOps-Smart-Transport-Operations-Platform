@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useVehicles } from '../hooks/useVehicles'
 import { useAuth } from '../contexts/AuthContext'
-import { createVehicle, updateVehicle, retireVehicle } from '../api/vehicleService'
+import { createVehicle, updateVehicle, retireVehicle, uploadVehicleDocument } from '../api/vehicleService'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/common/DataTable'
 import { StatusBadge } from '../components/common/StatusBadge'
@@ -39,6 +39,8 @@ export default function Vehicles() {
 
   const [retireConfirm, setRetireConfirm] = useState(null)
   const [retireLoading, setRetireLoading] = useState(false)
+
+  const [docLoading, setDocLoading] = useState(false)
 
   // Filtering
   const filtered = vehicles.filter(v => {
@@ -136,6 +138,23 @@ export default function Vehicles() {
       toast.error(err.response?.data?.message || 'Failed to retire vehicle')
     } finally {
       setRetireLoading(false)
+    }
+  }
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files[0]
+    if (!file || !selectedVehicle) return
+    setDocLoading(true)
+    try {
+      const updated = await uploadVehicleDocument(selectedVehicle.id, file)
+      setSelectedVehicle(updated)
+      setVehicles(prev => prev.map(v => v.id === updated.id ? updated : v))
+      toast.success('Document uploaded successfully')
+    } catch (err) {
+      toast.error('Failed to upload document')
+    } finally {
+      setDocLoading(false)
+      e.target.value = ''
     }
   }
 
@@ -259,6 +278,7 @@ export default function Vehicles() {
         error={error}
         emptyMessage="No vehicles found"
         emptyIcon="local_shipping"
+        pageSize={5}
       />
 
       {/* Add / Edit Modal */}
@@ -370,6 +390,36 @@ export default function Vehicles() {
                   }
                 </div>
               ))}
+              
+              <div className="pt-4 mt-4 border-t border-outline-variant/50">
+                <div className="flex justify-between items-center mb-3">
+                  <span className="text-sm font-bold text-on-surface">Documents</span>
+                  {role === 'fleet_manager' && (
+                    <label className={`btn-secondary text-xs py-1 px-2 cursor-pointer ${docLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+                      <span className="material-symbols-outlined text-[14px]">
+                        {docLoading ? 'sync' : 'upload'}
+                      </span>
+                      {docLoading ? 'Uploading...' : 'Upload'}
+                      <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx,.jpg,.png" />
+                    </label>
+                  )}
+                </div>
+                {(!selectedVehicle.documents || selectedVehicle.documents.length === 0) ? (
+                  <p className="text-xs text-on-surface-variant italic">No documents attached.</p>
+                ) : (
+                  <ul className="space-y-2">
+                    {selectedVehicle.documents.map(doc => (
+                      <li key={doc.id} className="flex justify-between items-center bg-surface-container rounded px-2 py-1.5 border border-outline-variant">
+                        <div className="flex items-center gap-2 truncate">
+                          <span className="material-symbols-outlined text-secondary-fixed text-[16px]">description</span>
+                          <span className="text-xs text-on-surface truncate">{doc.name}</span>
+                        </div>
+                        <span className="text-[10px] text-on-surface-variant flex-shrink-0">{doc.upload_date}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           )}
         </ModalBody>

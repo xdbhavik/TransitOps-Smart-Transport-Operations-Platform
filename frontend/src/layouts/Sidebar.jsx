@@ -1,5 +1,6 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { useTheme } from '../contexts/ThemeContext'
 
 const ROLE_NAV = {
   fleet_manager: [
@@ -28,6 +29,7 @@ const ROLE_NAV = {
 
 export function Sidebar() {
   const { role, user, logout } = useAuth()
+  const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const navItems = ROLE_NAV[role] || []
 
@@ -77,9 +79,20 @@ export function Sidebar() {
       {/* User + Logout Footer */}
       <div className="border-t border-outline-variant/50 px-3 py-4 space-y-1">
         {user && (
-          <div className="px-3 py-2 rounded-md">
-            <p className="text-sm font-semibold text-on-surface truncate">{user.name || user.email || 'User'}</p>
-            <p className="text-xs text-on-surface-variant truncate">{user.roleLabel}</p>
+          <div className="px-3 py-2 rounded-md flex items-center justify-between">
+            <div className="overflow-hidden">
+              <p className="text-sm font-semibold text-on-surface truncate">{user.name || user.email || 'User'}</p>
+              <p className="text-xs text-on-surface-variant truncate">{user.roleLabel}</p>
+            </div>
+            <button
+              onClick={toggleTheme}
+              className="w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container-high transition-colors"
+              title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+            >
+              <span className="material-symbols-outlined text-[18px] text-on-surface-variant">
+                {theme === 'light' ? 'dark_mode' : 'light_mode'}
+              </span>
+            </button>
           </div>
         )}
         <button

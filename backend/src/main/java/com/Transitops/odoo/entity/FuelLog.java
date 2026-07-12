@@ -23,6 +23,9 @@ public class FuelLog {
     @EqualsAndHashCode.Include
     private String id;
 
+    @Column(name = "fuel_log_code", nullable = false, unique = true)
+    private String fuelLogCode;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;

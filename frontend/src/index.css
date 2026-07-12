@@ -107,60 +107,58 @@
 /* ── Base Styles ── */
 @layer base {
   :root {
-    /* Light Theme Defaults */
-    --app-primary: #7c3aed;
-    --app-primary-container: #ede9fe;
-    --app-primary-fixed: #c4b5fd;
-    --app-primary-fixed-dim: #a78bfa;
+    /* Light Theme Defaults derived from user palette */
+    --app-primary: #4a6163;
+    --app-primary-container: #dce5e6;
+    --app-primary-fixed: #b3c7c8;
+    --app-primary-fixed-dim: #8fa6a8;
     --app-on-primary: #ffffff;
-    --app-on-primary-fixed: #2e1065;
-    --app-on-primary-container: #5b21b6;
-    --app-on-primary-fixed-variant: #5b21b6;
-    --app-inverse-primary: #a78bfa;
-    --app-surface-tint: #7c3aed;
+    --app-on-primary-fixed: #071e20;
+    --app-on-primary-container: #1b2f30;
+    --app-on-primary-fixed-variant: #1b2f30;
+    --app-inverse-primary: #8fa6a8;
+    --app-surface-tint: #4a6163;
 
-    --app-secondary: #52525b;
-    --app-secondary-container: #f4f4f5;
-    --app-secondary-fixed: #e4e4e7;
-    --app-secondary-fixed-dim: #d4d4d8;
+    --app-secondary: #f9a66c;
+    --app-secondary-container: #fdf0e6;
+    --app-secondary-fixed: #ffd3b5;
+    --app-secondary-fixed-dim: #f9a66c;
     --app-on-secondary: #ffffff;
-    --app-on-secondary-container: #27272a;
-    --app-on-secondary-fixed: #18181b;
-    --app-on-secondary-fixed-variant: #3f3f46;
+    --app-on-secondary-container: #472005;
+    --app-on-secondary-fixed: #311300;
+    --app-on-secondary-fixed-variant: #5f2b09;
 
-    --app-tertiary: #059669;
-    --app-tertiary-container: #d1fae5;
-    --app-tertiary-fixed: #6ee7b7;
-    --app-tertiary-fixed-dim: #34d399;
-    --app-on-tertiary: #ffffff;
-    --app-on-tertiary-container: #064e3b;
-    --app-on-tertiary-fixed: #064e3b;
-    --app-on-tertiary-fixed-variant: #047857;
+    --app-tertiary: #ffc94b;
+    --app-tertiary-container: #fff4d6;
+    --app-tertiary-fixed: #ffe099;
+    --app-tertiary-fixed-dim: #ffc94b;
+    --app-on-tertiary: #2e2000;
+    --app-on-tertiary-container: #4c3500;
+    --app-on-tertiary-fixed: #2e2000;
+    --app-on-tertiary-fixed-variant: #6b4d00;
 
-    --app-background: #ffffff;
-    --app-on-background: #09090b;
+    --app-background: #f9faf4;
+    --app-on-background: #1a1c18;
 
-    --app-surface: #ffffff;
-    --app-surface-dim: #f4f4f5;
-    --app-surface-bright: #ffffff;
-    --app-surface-variant: #f4f4f5;
+    --app-surface: #f9faf4;
+    --app-surface-dim: #eef0e9;
+    --app-surface-bright: #fbfcf6;
+    --app-surface-variant: #eef0e9;
     --app-surface-container-lowest: #ffffff;
-    --app-surface-container-low: #fafafa;
-    --app-surface-container: #f4f4f5;
-    --app-surface-container-high: #e4e4e7;
-    --app-surface-container-highest: #d4d4d8;
-    --app-on-surface: #09090b;
-    --app-on-surface-variant: #52525b;
-    --app-inverse-surface: #18181b;
-    --app-inverse-on-surface: #f4f4f5;
+    --app-surface-container-low: #f3f5ed;
+    --app-surface-container: #edf0e7;
+    --app-surface-container-high: #e1e4db;
+    --app-surface-container-highest: #d6d9cf;
+    --app-on-surface: #1a1c18;
+    --app-on-surface-variant: #43483e;
 
-    --app-outline: #a1a1aa;
-    --app-outline-variant: #e4e4e7;
+    --app-outline: #73796e;
+    --app-outline-variant: #c3c8bc;
 
-    --app-error: #dc2626;
-    --app-error-container: #fee2e2;
+    --app-error: #f17a7e;
+    --app-error-container: #fde8e8;
     --app-on-error: #ffffff;
-    --app-on-error-container: #991b1b;
+    --app-on-error-container: #670b10;
   }
 
   .dark {
@@ -235,12 +233,14 @@
   *:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--color-primary); outline-offset: 2px; }
 
   input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) opacity(0.5);
+    filter: none;
+    opacity: 0.5;
     cursor: pointer;
   }
   
   .dark input[type="date"]::-webkit-calendar-picker-indicator {
-    filter: invert(1) opacity(0.5);
+    filter: invert(1);
+    opacity: 0.5;
   }
 
   ::selection { background: color-mix(in srgb, var(--color-primary) 30%, transparent); color: var(--color-on-surface); }

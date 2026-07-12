@@ -4,17 +4,18 @@ import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { loginApi } from '../api/authService'
 
+
 const ROLES = [
-  { value: 'fleet_manager', label: 'Fleet Manager' },
-  { value: 'driver', label: 'Driver (Dispatcher)' },
-  { value: 'safety_officer', label: 'Safety Officer' },
-  { value: 'financial_analyst', label: 'Financial Analyst' },
+  { value: 'fleet_manager', label: 'Fleet Manager', email: 'fleet@transitops.com' },
+  { value: 'driver', label: 'Driver (Dispatcher)', email: 'driver@transitops.com' },
+  { value: 'safety_officer', label: 'Safety Officer', email: 'safety@transitops.com' },
+  { value: 'financial_analyst', label: 'Financial Analyst', email: 'finance@transitops.com' },
 ]
 
 export default function Login() {
-  const [email, setEmail] = useState('admin@transitops.com')
-  const [password, setPassword] = useState('')
-  const [role, setRole] = useState('fleet_manager')
+  const [roleSelection, setRoleSelection] = useState('fleet_manager')
+  const [email, setEmail] = useState('fleet@transitops.com')
+  const [password, setPassword] = useState('password123')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -33,14 +34,14 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const data = await loginApi(email, password, role)
+      const data = await loginApi(email, password)
       login(
         { name: data.user?.name || email.split('@')[0], email, ...data.user },
-        data.user?.role || role,
+        data.user?.role,
         data.token || data.access_token || 'demo-token'
       )
       success('Signed in successfully!')
-      navigate('/dashboard')
+      navigate('/')
     } catch (err) {
       const msg = err.response?.data?.message || err.response?.data?.detail || 'Invalid credentials'
       setError(msg)
@@ -50,26 +51,19 @@ export default function Login() {
     }
   }
 
-  // DEV: quick login without real API
-  const handleDemoLogin = (demoRole) => {
-    login(
-      { name: demoRole.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' '), email: `${demoRole}@transitops.com` },
-      demoRole,
-      `demo-token-${demoRole}`
-    )
-    success(`Signed in as ${demoRole.split('_').map(w => w[0].toUpperCase() + w.slice(1)).join(' ')}`)
-    navigate('/dashboard')
-  }
 
   return (
     <div className="w-full">
       {/* Form Header */}
-      <div className="mb-8 text-center md:text-left">
-        <h2 className="text-headline-lg-mobile md:text-headline-lg font-bold text-on-surface mb-2 tracking-tight">
-          Sign in to your account
+      <div className="mb-10 text-center">
+        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-container text-primary mb-4">
+          <span className="material-symbols-outlined text-3xl">directions_bus</span>
+        </div>
+        <h2 className="text-3xl font-extrabold text-on-surface mb-2 tracking-tight">
+          Operations Portal
         </h2>
-        <p className="text-body-md text-on-surface-variant">
-          Enter your credentials to access the platform
+        <p className="text-base text-on-surface-variant max-w-sm mx-auto">
+          Please select your role and sign in to access your dashboard.
         </p>
       </div>
 
@@ -81,7 +75,37 @@ export default function Login() {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Role Selection */}
+        <div>
+          <label htmlFor="role" className="form-label">Role (RBAC)</label>
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">badge</span>
+            </div>
+            <select
+              id="role"
+              value={roleSelection}
+              onChange={(e) => {
+                const selected = e.target.value
+                setRoleSelection(selected)
+                const roleObj = ROLES.find(r => r.value === selected)
+                if (roleObj) {
+                  setEmail(roleObj.email)
+                  setPassword('password123')
+                }
+              }}
+              className="form-input pl-10 appearance-none bg-surface-container border border-outline-variant rounded-md text-sm h-11 w-full focus:ring-2 focus:ring-primary focus:border-primary text-on-surface"
+            >
+              {ROLES.map(r => (
+                <option key={r.value} value={r.value}>{r.label}</option>
+              ))}
+            </select>
+            <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">expand_more</span>
+            </div>
+          </div>
+        </div>
         {/* Email */}
         <div>
           <label htmlFor="email" className="form-label">Email Address</label>
@@ -129,30 +153,7 @@ export default function Login() {
           </div>
         </div>
 
-        {/* Role */}
-        <div>
-          <label htmlFor="role" className="form-label">Role (RBAC)</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none z-10">
-              <span className="material-symbols-outlined text-on-surface-variant text-[18px]">badge</span>
-            </div>
-            <select
-              id="role"
-              value={role}
-              onChange={e => setRole(e.target.value)}
-              className="form-select pl-10"
-            >
-              {ROLES.map(r => (
-                <option key={r.value} value={r.value} className="bg-surface text-on-surface">
-                  {r.label}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-on-surface-variant">
-              <span className="material-symbols-outlined text-[18px]">expand_more</span>
-            </div>
-          </div>
-        </div>
+
 
         {/* Remember me */}
         <div className="flex items-center justify-between py-1">
@@ -184,31 +185,7 @@ export default function Login() {
           )}
         </button>
 
-        {/* Security note */}
-        <p className="text-center text-xs text-on-surface-variant/50 flex items-center justify-center gap-1.5">
-          <span className="material-symbols-outlined text-[14px]">security</span>
-          Secure connection established
-        </p>
       </form>
-
-      {/* Demo login shortcuts */}
-      <div className="mt-6 pt-6 border-t border-outline-variant">
-        <p className="text-xs text-on-surface-variant mb-3 text-center font-medium uppercase tracking-wider">
-          Quick Demo Access
-        </p>
-        <div className="grid grid-cols-2 gap-2">
-          {ROLES.map(r => (
-            <button
-              key={r.value}
-              onClick={() => handleDemoLogin(r.value)}
-              className="px-3 py-2 text-xs rounded-md border border-outline-variant text-on-surface-variant hover:text-on-surface hover:bg-surface-container-high transition-colors text-left"
-            >
-              <span className="block font-semibold text-primary">{r.label}</span>
-              <span className="block text-[10px] opacity-70">Click to log in</span>
-            </button>
-          ))}
-        </div>
-      </div>
     </div>
   )
 }
