@@ -1,6 +1,7 @@
 package com.Transitops.odoo.entity;
 
 import com.Transitops.odoo.enums.RoleName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -28,6 +29,7 @@ public class Role {
     private RoleName roleName;
 
     @OneToMany(mappedBy = "role", fetch = FetchType.LAZY)
+    @JsonIgnore
     @Builder.Default
     private List<User> users = new ArrayList<>();
 }
