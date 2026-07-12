@@ -70,3 +70,17 @@ export const createFuelLog = async (payload) => {
     throw new Error(apiErrorMessage(error, 'Failed to create fuel log'))
   }
 }
+
+export const getFuelReport = async () => {
+  try {
+    const { data } = await axiosInstance.get('/api/fuel/report')
+    return {
+      totalFuelEntries: data.totalFuelEntries,
+      totalLiters: data.totalLiters,
+      totalCost: data.totalCost,
+      averageMileage: data.averageMileage,
+    }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to load fuel report'))
+  }
+}

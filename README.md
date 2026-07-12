@@ -1,61 +1,126 @@
-# TransitOps — Smart Transport Operations Platform 🚛
+# TransitOps - Smart Transport Operations Platform
 
-TransitOps is a centralized logistics and transport operations management platform. Designed for logistics companies shifting away from manual spreadsheets, TransitOps digitizes and integrates vehicle registries, CDL driver profiles, trip dispatch lifecycles, maintenance ticketing, fuel logs, and expense tracking. The system enforces strict business rules and provides real-time operational insights via role-based dashboards.
+TransitOps is a full-stack transport operations platform for managing vehicles, drivers, trips, maintenance, fuel, expenses, reporting, and admin workflows. It includes a Spring Boot backend with JWT auth and a React + Vite frontend for fleet operations dashboards and reporting.
 
----
+## What is included
 
-## 🔑 Quick Demo Access Credentials
+- Vehicle registry and vehicle health tracking
+- Driver management with license checks and reminders
+- Trip lifecycle management and live tracking
+- Maintenance records and upcoming maintenance views
+- Fuel logs and fuel reporting
+- Expense tracking and vehicle/trip expense lookups
+- Dashboard summaries with PDF and CSV export
+- Role-based access control for fleet, driver, safety, finance, and admin users
+- Swagger/OpenAPI API documentation
+- Docker setup for local full-stack runs
 
-To test the application, use the dropdown on the **Operations Portal** sign-in screen to select your role. The corresponding credentials are listed below:
+## Tech Stack
 
-| Role (RBAC Scope) | Login Email | Password |
-|---|---|---|
-| **Fleet Manager** | `fleet@transitops.com` | `password123` |
-| **Driver / Dispatcher** | `driver@transitops.com` | `password123` |
-| **Safety Officer** | `safety@transitops.com` | `password123` |
-| **Financial Analyst** | `finance@transitops.com` | `password123` |
+- Backend: Spring Boot 4.1, Java 21, Spring Security, Spring Data JPA, JWT, Springdoc OpenAPI, MySQL
+- Frontend: React 19, Vite 8, React Router 7, axios, Recharts, jsPDF, jspdf-autotable, Tailwind CSS 4
+- DevOps: Docker Compose, MySQL 8.4
 
-*Note: Credentials correspond to mock local storage profiles seeded automatically in `mockDb.js`.*
+## Project Structure
 
----
+- `backend/` - Spring Boot API and business logic
+- `frontend/` - React application
+- `docker-compose.yml` - Local container stack
 
-## 🛠️ Tech Stack & Architecture
+For UI-specific notes, see [frontend/README.md](frontend/README.md).
 
-- **Core Framework:** React (Functional Components + Hooks)
-- **Routing & Guards:** React Router v6 (Scoped Role-Based Routing guards)
-- **State Management:** Context API (Auth session context, Theme toggle state)
-- **Styling:** Custom CSS (Obsidian Design Tokens, responsive layouts, support for Dark/Light mode)
-- **Visuals & Charts:** Recharts (responsive analytics & distribution graphs)
-- **Exports:** Native CSV generation & PDF report rendering (`jspdf`, `jspdf-autotable`)
+## Prerequisites
 
----
+- Java 21
+- Node.js 20+ and npm
+- MySQL 8 if you want to run locally without Docker
+- Docker Desktop if you want to run the container stack
 
-## ⚡ Key Features
+## Run Locally Without Docker
 
-1. **Role-Based Access Control (RBAC):** Distinct dashboards, views, and navigation menus custom-tailored for Fleet Managers, Drivers, Safety Officers, and Financial Analysts. Unauthenticated or unauthorized page requests route to secure login/403 pages.
-2. **Interactive Dashboard:** Dynamic metric cards and utilization stats (Total Fleet, Active Trucks, Available assets, Maintenance tickets). Includes live filtering by vehicle type, status, and region.
-3. **Vehicle & Driver Registry:** Complete profiles featuring custom document attachments (PDF/images), safety score monitoring, and automated licensing warnings.
-4. **Trip Lifecycle Dispatch:** Interactive dispatch board to schedule, start, log fuel/distance, and complete cargo trips.
-5. **Maintenance & Fuel Logging:** Real-time logging of service checks and fuel expenses with automatic asset cost calculations.
-6. **Reports & Analytics:** Performance tables with immediate filters and single-click **CSV** and **PDF** exports.
-7. **Obsidian Dark & Light Modes:** Custom theme toggle located in the main header and sidebar layout.
+### 1. Start the backend
 
----
+From the `backend` folder:
 
-## 🚀 Running the Project Locally
+```bash
+./mvnw spring-boot:run
+```
 
-### 1. Install Dependencies
+Backend runs on `http://localhost:8080`.
+
+### 2. Start the frontend
+
+From the `frontend` folder:
+
 ```bash
 npm install
-```
-
-### 2. Run the Development Server
-```bash
 npm run dev
 ```
-Open [http://localhost:5173](http://localhost:5173) in your browser to view the application.
 
-### 3. Build for Production
+Frontend runs on `http://localhost:5173`.
+
+## Run With Docker
+
+From the repository root:
+
 ```bash
-npm run build
+docker compose up --build
 ```
+
+Container ports:
+
+- Frontend: `http://localhost:3000`
+- Backend: `http://localhost:8081`
+- MySQL: `localhost:3307`
+
+## API Docs
+
+Swagger UI is available at:
+
+```text
+http://localhost:8080/swagger-ui/index.html
+```
+
+## Demo / Seed Credentials
+
+Seeded accounts use the password `Pass@1234`.
+
+| Role | Email |
+|---|---|
+| Admin | `seed.admin@transitops.local` |
+| Fleet Manager | `seed.fleet@transitops.local` |
+| Dispatcher | `seed.dispatcher@transitops.local` |
+| Safety Officer | `seed.safety@transitops.local` |
+| Financial Analyst | `seed.finance@transitops.local` |
+
+## Environment Variables
+
+The backend is configured through environment variables so it can run locally or in Docker.
+
+Common values:
+
+- `SPRING_DATASOURCE_URL`
+- `SPRING_DATASOURCE_USERNAME`
+- `SPRING_DATASOURCE_PASSWORD`
+- `JWT_SECRET`
+- `APP_SEED_ENABLED`
+- `APP_LICENSE_REMINDER_ENABLED`
+- `APP_LICENSE_REMINDER_DAYS_BEFORE_EXPIRY`
+- `APP_LICENSE_REMINDER_CRON`
+- `APP_MAIL_MODE`
+- `APP_CORS_ALLOWED_ORIGINS`
+
+## Main Features
+
+- Role-based dashboard after sign-in
+- Vehicle, driver, maintenance, fuel, and expense CRUD flows
+- Dashboard PDF/CSV export
+- Reports and analytics tabs
+- License reminder support
+- Admin user management endpoints in the backend
+
+## Notes
+
+- The backend uses seeded demo data by default.
+- The frontend expects the backend API to be available before login and dashboard actions can work.
+- Some features are backend-only for now, such as the admin user management UI.

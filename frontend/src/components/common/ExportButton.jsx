@@ -6,14 +6,14 @@ import 'jspdf-autotable'
  */
 export function ExportButton({ data, filename = 'export', headers, label = 'Export', className = '' }) {
   const handleCSVExport = () => {
-    if (!data || data.length === 0) return
+    const keys = headers?.length ? headers.map(h => h.key) : (data?.length ? Object.keys(data[0]) : [])
+    const headerLabels = headers?.length ? headers.map(h => h.label) : keys
 
-    const keys = headers ? headers.map(h => h.key) : Object.keys(data[0])
-    const headerLabels = headers ? headers.map(h => h.label) : keys
+    if (!keys.length) return
 
     const csvRows = [
       headerLabels.join(','),
-      ...data.map(row =>
+      ...(data || []).map(row =>
         keys.map(key => {
           const val = row[key] ?? ''
           const str = String(val).replace(/"/g, '""')
@@ -32,11 +32,13 @@ export function ExportButton({ data, filename = 'export', headers, label = 'Expo
   }
 
   const handlePDFExport = () => {
-    if (!data || data.length === 0) return
     const doc = new jsPDF()
-    const keys = headers ? headers.map(h => h.key) : Object.keys(data[0])
-    const headerLabels = headers ? headers.map(h => h.label) : keys
-    const body = data.map(row => keys.map(key => String(row[key] ?? '')))
+    const keys = headers?.length ? headers.map(h => h.key) : (data?.length ? Object.keys(data[0]) : [])
+    const headerLabels = headers?.length ? headers.map(h => h.label) : keys
+
+    if (!keys.length) return
+
+    const body = (data || []).map(row => keys.map(key => String(row[key] ?? '')))
 
     doc.setFontSize(16)
     doc.text(`TransitOps: ${label}`, 14, 15)
@@ -55,8 +57,7 @@ export function ExportButton({ data, filename = 'export', headers, label = 'Expo
       <button
         onClick={handleCSVExport}
         className="btn-secondary"
-        disabled={!data || data.length === 0}
-        title={data?.length === 0 ? 'No data to export' : 'Download CSV'}
+        title={data?.length === 0 ? 'Download CSV with headers only' : 'Download CSV'}
       >
         <span className="material-symbols-outlined text-[18px]">table_chart</span>
         CSV
@@ -64,8 +65,7 @@ export function ExportButton({ data, filename = 'export', headers, label = 'Expo
       <button
         onClick={handlePDFExport}
         className="btn-secondary"
-        disabled={!data || data.length === 0}
-        title={data?.length === 0 ? 'No data to export' : 'Download PDF'}
+        title={data?.length === 0 ? 'Download PDF with headers only' : 'Download PDF'}
       >
         <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
         PDF

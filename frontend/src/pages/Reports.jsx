@@ -64,6 +64,7 @@ export default function Reports() {
   }
 
   const currentData = getCurrentData()
+  const canExport = ['financial_analyst', 'fleet_manager', 'admin'].includes(role)
 
   const renderFuelEfficiency = () => (
     <div className="space-y-6">
@@ -219,7 +220,7 @@ export default function Reports() {
           <h2 className="font-display text-2xl font-bold tracking-tight text-on-surface">Reports & Analytics</h2>
           <p className="text-sm text-on-surface-variant mt-1">Comprehensive fleet performance and financial reports.</p>
         </div>
-        {role === 'financial_analyst' && (
+        {canExport && (
           <ExportButton
             data={currentData}
             filename={activeTab}

@@ -1,12 +1,13 @@
 import { useState } from 'react'
 import { useExpenses } from '../hooks/useExpenses'
 import { useVehicles } from '../hooks/useVehicles'
-import { createExpense } from '../api/expenseService'
+import { createExpense, deleteExpense, updateExpense } from '../api/expenseService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/common/DataTable'
 import { PageHeader } from '../components/common/PageHeader'
 import { Modal, ModalBody, ModalFooter } from '../components/common/Modal'
+import { ConfirmDialog } from '../components/common/ConfirmDialog'
 import { FormSelect } from '../components/forms/FormSelect'
 import { FormInput } from '../components/forms/FormInput'
 import { FormDatePicker } from '../components/forms/FormDatePicker'
@@ -29,6 +30,8 @@ export default function Expenses() {
   const [form, setForm] = useState({ vehicle_id: '', type: '', date: today, amount: '', notes: '' })
   const [formErrors, setFormErrors] = useState({})
   const [submitting, setSubmitting] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const nonRetiredVehicles = vehicles.filter(v => v.status !== 'Retired')
   const vehicleOptions = nonRetiredVehicles.map(v => ({ value: v.id, label: `${v.registration_number} — ${v.name}` }))
@@ -76,6 +79,43 @@ export default function Expenses() {
     }
   }
 
+  const handleDelete = async () => {
+    setDeleteLoading(true)
+    try {
+      await deleteExpense(deleteConfirm.id)
+      setExpenses(prev => prev.filter(expense => expense.id !== deleteConfirm.id))
+      toast.success('Expense deleted successfully')
+      setDeleteConfirm(null)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete expense')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleQuickEdit = async (row) => {
+    const nextAmount = window.prompt(`Update amount for expense #${row.id}`, String(row.amount ?? ''))
+    if (nextAmount === null) return
+    const amount = Number(nextAmount)
+    if (Number.isNaN(amount) || amount <= 0) {
+      toast.error('Amount must be greater than 0')
+      return
+    }
+    try {
+      const updated = await updateExpense(row.id, {
+        vehicle_id: row.vehicle_id,
+        type: row.type,
+        date: row.date,
+        amount,
+        notes: row.notes,
+      })
+      setExpenses(prev => prev.map(expense => expense.id === row.id ? { ...expense, amount: updated.amount ?? amount } : expense))
+      toast.success(`Expense #${row.id} updated`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to update expense')
+    }
+  }
+
   const uniqueVehicles = [...new Map(expenses.map(e => [e.vehicle?.id || e.vehicle_id, e.vehicle?.registration_number || e.vehicle_id])).entries()]
 
   const columns = [
@@ -104,7 +144,20 @@ export default function Expenses() {
       render: (val) => <span className="font-mono font-semibold">{val ? `$${Number(val).toLocaleString()}` : '--'}</span>,
     },
     { key: 'notes', label: 'Notes', render: (val) => <span className="text-on-surface-variant text-xs truncate max-w-[150px] block">{val || '—'}</span> },
-    { key: 'id', label: 'Actions', render: () => <button className="btn-ghost text-xs"><span className="material-symbols-outlined text-[16px]">visibility</span></button> },
+    {
+      key: 'id',
+      label: 'Actions',
+      render: (_, row) => (
+        <div className="flex items-center gap-1">
+          <button onClick={() => handleQuickEdit(row)} className="btn-ghost text-xs" title="Edit Amount">
+            <span className="material-symbols-outlined text-[16px]">edit</span>
+          </button>
+          <button onClick={() => setDeleteConfirm(row)} className="btn-ghost text-xs text-error hover:bg-error/5" title="Delete Expense">
+            <span className="material-symbols-outlined text-[16px]">delete</span>
+          </button>
+        </div>
+      ),
+    },
   ]
 
   return (
@@ -176,6 +229,17 @@ export default function Expenses() {
           </ModalFooter>
         </form>
       </Modal>
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={handleDelete}
+        title="Delete Expense"
+        message={`Are you sure you want to delete expense #${deleteConfirm?.id}? This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleteLoading}
+        variant="danger"
+      />
     </div>
   )
 }

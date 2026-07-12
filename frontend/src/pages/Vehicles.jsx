@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useVehicles } from '../hooks/useVehicles'
 import { useAuth } from '../contexts/AuthContext'
-import { createVehicle, updateVehicle, retireVehicle, uploadVehicleDocument } from '../api/vehicleService'
+import { createVehicle, deleteVehicle, retireVehicle, updateVehicleHealthScore, updateVehicle, uploadVehicleDocument } from '../api/vehicleService'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/common/DataTable'
 import { StatusBadge } from '../components/common/StatusBadge'
@@ -39,6 +39,8 @@ export default function Vehicles() {
 
   const [retireConfirm, setRetireConfirm] = useState(null)
   const [retireLoading, setRetireLoading] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   const [docLoading, setDocLoading] = useState(false)
 
@@ -141,6 +143,37 @@ export default function Vehicles() {
     }
   }
 
+  const handleDelete = async () => {
+    setDeleteLoading(true)
+    try {
+      await deleteVehicle(deleteConfirm.id)
+      setVehicles(prev => prev.filter(v => v.id !== deleteConfirm.id))
+      toast.success(`Vehicle ${deleteConfirm.registration_number} deleted.`)
+      setDeleteConfirm(null)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete vehicle')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleHealthScoreUpdate = async (vehicle) => {
+    const nextValue = window.prompt(`Enter new health score for ${vehicle.registration_number} (0-100)`, String(vehicle.health_score ?? 0))
+    if (nextValue === null) return
+    const score = Number(nextValue)
+    if (Number.isNaN(score) || score < 0 || score > 100) {
+      toast.error('Health score must be between 0 and 100')
+      return
+    }
+    try {
+      const result = await updateVehicleHealthScore(vehicle.id, score)
+      setVehicles(prev => prev.map(v => v.id === vehicle.id ? { ...v, health_score: score } : v))
+      toast.success(result.message || 'Health score updated')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to update health score')
+    }
+  }
+
   const handleFileUpload = async (e) => {
     const file = e.target.files[0]
     if (!file || !selectedVehicle) return
@@ -211,6 +244,9 @@ export default function Vehicles() {
               <button onClick={() => openEdit(row)} className="btn-ghost text-xs" title="Edit">
                 <span className="material-symbols-outlined text-[16px]">edit</span>
               </button>
+              <button onClick={() => handleHealthScoreUpdate(row)} className="btn-ghost text-xs" title="Update Health Score">
+                <span className="material-symbols-outlined text-[16px]">health_and_safety</span>
+              </button>
               {row.status === 'Available' && (
                 <button
                   onClick={() => setRetireConfirm(row)}
@@ -220,6 +256,9 @@ export default function Vehicles() {
                   <span className="material-symbols-outlined text-[16px]">archive</span>
                 </button>
               )}
+              <button onClick={() => setDeleteConfirm(row)} className="btn-ghost text-xs text-error hover:bg-error/5" title="Delete">
+                <span className="material-symbols-outlined text-[16px]">delete</span>
+              </button>
             </>
           )}
         </div>
@@ -437,6 +476,17 @@ export default function Vehicles() {
         message={`Are you sure you want to retire ${retireConfirm?.registration_number}? This action cannot be undone — the vehicle will no longer be available for dispatch.`}
         confirmLabel="Retire Vehicle"
         loading={retireLoading}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={handleDelete}
+        title="Delete Vehicle"
+        message={`Are you sure you want to delete ${deleteConfirm?.registration_number}? This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleteLoading}
+        variant="danger"
       />
     </div>
   )

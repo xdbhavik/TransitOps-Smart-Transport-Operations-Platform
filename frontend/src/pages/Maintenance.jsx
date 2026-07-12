@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMaintenance } from '../hooks/useMaintenance'
 import { useVehicles } from '../hooks/useVehicles'
-import { createMaintenance, closeMaintenance } from '../api/maintenanceService'
+import { createMaintenance, closeMaintenance, getUpcomingMaintenance } from '../api/maintenanceService'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/common/DataTable'
 import { StatusBadge } from '../components/common/StatusBadge'
@@ -26,6 +26,8 @@ export default function Maintenance() {
   const [submitting, setSubmitting] = useState(false)
   const [closeConfirm, setCloseConfirm] = useState(null)
   const [closeLoading, setCloseLoading] = useState(false)
+  const [upcomingRecords, setUpcomingRecords] = useState([])
+  const [upcomingLoading, setUpcomingLoading] = useState(false)
 
   // Exclude Retired vehicles from dropdown
   const eligibleVehicles = vehicles.filter(v => v.status !== 'Retired')
@@ -87,6 +89,18 @@ export default function Maintenance() {
     }
   }
 
+  const loadUpcomingMaintenance = async () => {
+    setUpcomingLoading(true)
+    try {
+      const records = await getUpcomingMaintenance()
+      setUpcomingRecords(records)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to load upcoming maintenance')
+    } finally {
+      setUpcomingLoading(false)
+    }
+  }
+
   const uniqueVehicles = [...new Set(records.map(r => r.vehicle?.registration_number || r.vehicle_id).filter(Boolean))]
 
   const columns = [
@@ -138,6 +152,10 @@ export default function Maintenance() {
         subtitle="Track vehicle maintenance records and shop status."
         action={{ label: 'Add Record', icon: 'add', onClick: openAdd, id: 'btn-add-maintenance' }}
       >
+        <button onClick={loadUpcomingMaintenance} className="btn-secondary py-2" disabled={upcomingLoading}>
+          <span className="material-symbols-outlined text-[18px]">schedule</span>
+          {upcomingLoading ? 'Loading...' : 'Upcoming Maintenance'}
+        </button>
         <select
           value={vehicleFilter}
           onChange={e => setVehicleFilter(e.target.value)}
@@ -158,6 +176,35 @@ export default function Maintenance() {
       </PageHeader>
 
       <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No maintenance records" emptyIcon="build" pageSize={5} />
+
+      {upcomingRecords.length > 0 && (
+        <div className="mt-6 card overflow-hidden">
+          <div className="table-head p-4 flex items-center justify-between">
+            <p className="text-xs font-semibold uppercase tracking-wider text-on-surface-variant">Upcoming Maintenance</p>
+            <span className="text-xs text-on-surface-variant">Loaded from backend</span>
+          </div>
+          <table className="w-full">
+            <thead>
+              <tr className="table-head">
+                <th className="table-th">Vehicle</th>
+                <th className="table-th">Type</th>
+                <th className="table-th">Date</th>
+                <th className="table-th text-right">Status</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-outline-variant">
+              {upcomingRecords.map((record) => (
+                <tr key={record.id} className="table-row">
+                  <td className="table-td font-medium">{record.vehicle?.registration_number || record.vehicle_id || '--'}</td>
+                  <td className="table-td">{record.type_of_work}</td>
+                  <td className="table-td">{record.date_created}</td>
+                  <td className="table-td text-right"><StatusBadge status={record.status} /></td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
 
       {/* Add Modal */}
       <Modal isOpen={modalMode === 'add'} onClose={closeModal} title="Add Maintenance Record" size="md">

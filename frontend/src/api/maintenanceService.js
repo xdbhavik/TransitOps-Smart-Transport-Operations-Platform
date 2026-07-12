@@ -78,3 +78,12 @@ export const closeMaintenance = async (id) => {
     throw new Error(apiErrorMessage(error, 'Failed to close maintenance record'))
   }
 }
+
+export const getUpcomingMaintenance = async () => {
+  try {
+    const { data } = await axiosInstance.get('/api/maintenance/upcoming')
+    return Array.isArray(data) ? data.map(mapMaintenance) : []
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to load upcoming maintenance'))
+  }
+}

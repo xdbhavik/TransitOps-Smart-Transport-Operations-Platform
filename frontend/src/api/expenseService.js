@@ -1,5 +1,5 @@
 import axiosInstance from './axiosInstance'
-import { apiErrorMessage, humanizeEnum, toDateOnly, toLocalDateTime, toNumber, toExpenseTypeEnum } from './backendTransforms'
+import { apiErrorMessage, humanizeEnum, toDateOnly, toExpenseTypeEnum, toLocalDateTime, toNumber } from './backendTransforms'
 import { getTrips } from './tripService'
 import { getVehicles } from './vehicleService'
 
@@ -83,6 +83,42 @@ export const createExpense = async (payload) => {
     }
   } catch (error) {
     throw new Error(apiErrorMessage(error, 'Failed to create expense'))
+  }
+}
+
+export const updateExpense = async (id, payload) => {
+  try {
+    const requestBody = await buildExpenseRequest(payload)
+    const { data } = await axiosInstance.put(`/api/expenses/${id}`, requestBody)
+    return mapExpense(data, Object.create(null), Object.create(null))
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to update expense'))
+  }
+}
+
+export const deleteExpense = async (id) => {
+  try {
+    await axiosInstance.delete(`/api/expenses/${id}`)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to delete expense'))
+  }
+}
+
+export const getExpensesByVehicle = async (vehicleId) => {
+  try {
+    const { data } = await axiosInstance.get(`/api/expenses/vehicle/${vehicleId}`)
+    return Array.isArray(data) ? data.map((expense) => mapExpense(expense, Object.create(null), Object.create(null))) : []
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to load vehicle expenses'))
+  }
+}
+
+export const getExpensesByTrip = async (tripId) => {
+  try {
+    const { data } = await axiosInstance.get(`/api/expenses/trip/${tripId}`)
+    return Array.isArray(data) ? data.map((expense) => mapExpense(expense, Object.create(null), Object.create(null))) : []
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to load trip expenses'))
   }
 }
 

@@ -1,8 +1,20 @@
+import axiosInstance from './axiosInstance'
 import { getVehicles } from './vehicleService'
 import { getDrivers } from './driverService'
 import { getTrips } from './tripService'
 import { getExpenses } from './expenseService'
 import { getFuelLogs } from './fuelService'
+
+const downloadBlob = (blob, filename) => {
+  const url = window.URL.createObjectURL(blob)
+  const anchor = document.createElement('a')
+  anchor.href = url
+  anchor.download = filename
+  anchor.click()
+  window.URL.revokeObjectURL(url)
+}
+
+const buildReportFilename = (extension) => `dashboard-report-${new Date().toISOString().split('T')[0]}.${extension}`
 
 export const getDashboardStats = async (filters = {}) => {
   const [vehicles, trips, drivers] = await Promise.all([getVehicles(), getTrips(), getDrivers()])
@@ -137,4 +149,18 @@ export const getVehicleROIReport = async () => {
       roi: vehicle.status === 'Retired' ? null : roi,
     }
   })
+}
+
+export const exportDashboardPdf = async () => {
+  const response = await axiosInstance.get('/api/dashboard/export/pdf', {
+    responseType: 'blob',
+  })
+  downloadBlob(response.data, buildReportFilename('pdf'))
+}
+
+export const exportDashboardCsv = async () => {
+  const response = await axiosInstance.get('/api/dashboard/export/csv', {
+    responseType: 'blob',
+  })
+  downloadBlob(response.data, buildReportFilename('csv'))
 }

@@ -80,6 +80,50 @@ export const updateDriverStatus = async (id, status) => {
   }
 }
 
+export const deleteDriver = async (id) => {
+  try {
+    await axiosInstance.delete(`/drivers/${id}`)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to delete driver'))
+  }
+}
+
+export const checkDriverAvailability = async (id) => {
+  try {
+    const { data } = await axiosInstance.get(`/drivers/${id}/availability`)
+    return {
+      available: Boolean(data.available),
+    }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to check driver availability'))
+  }
+}
+
+export const checkLicenseStatus = async (id) => {
+  try {
+    const { data } = await axiosInstance.get(`/drivers/${id}/license-status`)
+    return {
+      valid: Boolean(data.valid),
+      expiresIn: data.expiresIn,
+    }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to check license status'))
+  }
+}
+
+export const sendLicenseReminders = async () => {
+  try {
+    const { data } = await axiosInstance.post('/drivers/license-reminders/send')
+    return {
+      matched: data.matched,
+      sent: data.sent,
+      message: data.message,
+    }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to send license reminders'))
+  }
+}
+
 export const getOnTripDrivers = async () => {
   const { data } = await axiosInstance.get('/drivers/on-trip')
   return Array.isArray(data) ? data.map(mapDriver) : []

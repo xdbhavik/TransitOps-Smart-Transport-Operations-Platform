@@ -87,6 +87,26 @@ export const retireVehicle = async (id) => {
   }
 }
 
+export const deleteVehicle = async (id) => {
+  try {
+    await axiosInstance.delete(`/api/vehicles/${id}`)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to delete vehicle'))
+  }
+}
+
+export const updateVehicleHealthScore = async (id, score) => {
+  try {
+    const { data } = await axiosInstance.patch(`/api/vehicles/${id}/health-score`, { healthScore: score })
+    return {
+      id: data.vehicleId,
+      message: data.message,
+    }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to update vehicle health score'))
+  }
+}
+
 export const getAvailableVehicles = async () => {
   const { data } = await axiosInstance.get('/api/vehicles/available')
   return Array.isArray(data) ? data.map(mapVehicle) : []

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useDrivers } from '../hooks/useDrivers'
-import { createDriver, updateDriver, suspendDriver, unsuspendDriver } from '../api/driverService'
+import { checkLicenseStatus, createDriver, deleteDriver, sendLicenseReminders, updateDriver, suspendDriver, unsuspendDriver } from '../api/driverService'
 import { useAuth } from '../contexts/AuthContext'
 import { useToast } from '../contexts/ToastContext'
 import { DataTable } from '../components/common/DataTable'
@@ -57,6 +57,9 @@ export default function Drivers() {
   const [submitting, setSubmitting] = useState(false)
   const [confirmAction, setConfirmAction] = useState(null)
   const [actionLoading, setActionLoading] = useState(false)
+  const [deleteConfirm, setDeleteConfirm] = useState(null)
+  const [deleteLoading, setDeleteLoading] = useState(false)
+  const [remindersLoading, setRemindersLoading] = useState(false)
 
   const filtered = drivers.filter(d => {
     const q = search.toLowerCase()
@@ -141,6 +144,41 @@ export default function Drivers() {
     }
   }
 
+  const handleDelete = async () => {
+    setDeleteLoading(true)
+    try {
+      await deleteDriver(deleteConfirm.id)
+      setDrivers(prev => prev.filter(d => d.id !== deleteConfirm.id))
+      toast.success(`Driver ${deleteConfirm.name} deleted.`)
+      setDeleteConfirm(null)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to delete driver')
+    } finally {
+      setDeleteLoading(false)
+    }
+  }
+
+  const handleCheckLicense = async (driver) => {
+    try {
+      const result = await checkLicenseStatus(driver.id)
+      toast.success(result.valid ? `License is valid for ${result.expiresIn} day(s)` : 'License has expired')
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to check license status')
+    }
+  }
+
+  const handleSendReminders = async () => {
+    setRemindersLoading(true)
+    try {
+      const result = await sendLicenseReminders()
+      toast.success(result.message || `Reminders sent to ${result.sent} driver(s)`)
+    } catch (err) {
+      toast.error(err.response?.data?.message || err.message || 'Failed to send license reminders')
+    } finally {
+      setRemindersLoading(false)
+    }
+  }
+
   const columns = [
     {
       key: 'name',
@@ -198,6 +236,16 @@ export default function Drivers() {
               </span>
             </button>
           </RoleGuard>
+          <RoleGuard allowedRoles={['admin', 'fleet_manager', 'dispatcher']}>
+            <button onClick={() => handleCheckLicense(row)} className="btn-ghost text-xs" title="Check License">
+              <span className="material-symbols-outlined text-[16px]">verified_user</span>
+            </button>
+          </RoleGuard>
+          <RoleGuard allowedRoles={['admin', 'fleet_manager']}>
+            <button onClick={() => setDeleteConfirm(row)} className="btn-ghost text-xs text-error hover:bg-error/5" title="Delete Driver">
+              <span className="material-symbols-outlined text-[16px]">delete</span>
+            </button>
+          </RoleGuard>
         </div>
       ),
     },
@@ -210,7 +258,13 @@ export default function Drivers() {
         subtitle="Manage driver profiles, licenses, and operational statuses."
         action={role === 'safety_officer' ? { label: 'Add Driver', icon: 'person_add', onClick: openAdd, id: 'btn-add-driver' } : null}
       >
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <RoleGuard allowedRoles={['admin', 'fleet_manager']}>
+            <button onClick={handleSendReminders} className="btn-secondary py-2" disabled={remindersLoading}>
+              <span className="material-symbols-outlined text-[18px]">notifications_active</span>
+              {remindersLoading ? 'Sending...' : 'Send License Reminders'}
+            </button>
+          </RoleGuard>
           <select
             value={statusFilter}
             onChange={e => setStatusFilter(e.target.value)}
@@ -296,6 +350,17 @@ export default function Drivers() {
         confirmLabel={confirmAction?.action === 'suspend' ? 'Suspend' : 'Unsuspend'}
         loading={actionLoading}
         variant={confirmAction?.action === 'suspend' ? 'danger' : 'warning'}
+      />
+
+      <ConfirmDialog
+        isOpen={!!deleteConfirm}
+        onClose={() => setDeleteConfirm(null)}
+        onConfirm={handleDelete}
+        title="Delete Driver"
+        message={`Are you sure you want to delete ${deleteConfirm?.name}? This cannot be undone.`}
+        confirmLabel="Delete"
+        loading={deleteLoading}
+        variant="danger"
       />
     </div>
   )

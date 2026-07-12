@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { getDashboardStats } from '../api/reportService'
+import { exportDashboardCsv, exportDashboardPdf, getDashboardStats } from '../api/reportService'
 import { KPICard } from '../components/common/KPICard'
 import { CardSkeleton } from '../components/common/LoadingSkeleton'
 import {
@@ -31,6 +31,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [filters, setFilters] = useState({ vehicleType: '', vehicleStatus: '', region: '' })
+  const [exporting, setExporting] = useState(null)
 
   const fetchStats = async () => {
     try {
@@ -50,6 +51,19 @@ export default function Dashboard() {
   useEffect(() => {
     fetchStats()
   }, [filters])
+
+  const handleDashboardExport = async (type) => {
+    try {
+      setExporting(type)
+      if (type === 'pdf') {
+        await exportDashboardPdf()
+      } else {
+        await exportDashboardCsv()
+      }
+    } finally {
+      setExporting(null)
+    }
+  }
 
   const getDemoStats = () => ({
     activeVehicles: 53,
@@ -92,6 +106,25 @@ export default function Dashboard() {
         <div>
           <h2 className="font-display text-2xl font-bold tracking-tight text-on-surface">Dashboard</h2>
           <p className="text-sm text-on-surface-variant mt-1">Live fleet monitoring and operations matrix</p>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            onClick={() => handleDashboardExport('pdf')}
+            disabled={loading || exporting === 'pdf'}
+            className="btn-secondary py-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">picture_as_pdf</span>
+            {exporting === 'pdf' ? 'Exporting PDF...' : 'Export PDF'}
+          </button>
+          <button
+            onClick={() => handleDashboardExport('csv')}
+            disabled={loading || exporting === 'csv'}
+            className="btn-secondary py-2"
+          >
+            <span className="material-symbols-outlined text-[18px]">table_chart</span>
+            {exporting === 'csv' ? 'Exporting CSV...' : 'Export CSV'}
+          </button>
         </div>
 
         {/* Filter Bar */}
