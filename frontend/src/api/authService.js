@@ -1,40 +1,61 @@
-export const MOCK_USERS = [
-  { email: 'fleet@transitops.com', password: 'password123', role: 'fleet_manager', name: 'Raven K.' },
-  { email: 'driver@transitops.com', password: 'password123', role: 'driver', name: 'Elena Rostova' },
-  { email: 'safety@transitops.com', password: 'password123', role: 'safety_officer', name: 'Marcus Vance' },
-  { email: 'finance@transitops.com', password: 'password123', role: 'financial_analyst', name: 'David Chen' },
-]
+import axiosInstance from './axiosInstance'
+
+const normalizeRole = (roleName) => String(roleName || '').toLowerCase()
 
 export const loginApi = async (email, password) => {
-  // Simulating 500ms API response time
-  await new Promise(resolve => setTimeout(resolve, 500))
-  
-  const user = MOCK_USERS.find(u => u.email === email && u.password === password)
-  
-  if (!user) {
-    const error = new Error('Invalid credentials')
-    error.response = { data: { message: 'Invalid email or password' } }
-    throw error
-  }
-  
+  const { data } = await axiosInstance.post('/auth/login', {
+    email,
+    password,
+  })
+
   return {
+    token: data.token,
     user: {
-      name: user.name,
-      email: user.email,
-      role: user.role,
+      id: data.userId,
+      email: data.email,
+      role: normalizeRole(data.roleName),
+      name: email.split('@')[0],
     },
-    token: `mock-jwt-token-for-${user.role}`,
+    role: normalizeRole(data.roleName),
+    message: data.message,
+  }
+}
+
+export const registerApi = async (payload) => {
+  const { data } = await axiosInstance.post('/auth/register', {
+    fullName: payload.fullName,
+    email: payload.email,
+    password: payload.password,
+    phone: payload.phone,
+    roleName: payload.roleName ? payload.roleName.toUpperCase() : undefined,
+  })
+
+  return {
+    token: data.token,
+    user: {
+      id: data.userId,
+      fullName: data.fullName,
+      email: data.email,
+      phone: data.phone,
+      role: normalizeRole(data.roleName),
+    },
+    role: normalizeRole(data.roleName),
+    message: data.message,
   }
 }
 
 export const logoutApi = async () => {
-  await new Promise(resolve => setTimeout(resolve, 100))
+  return Promise.resolve()
 }
 
 export const getMeApi = async () => {
-  return {
-    name: 'Raven K.',
-    email: 'fleet@transitops.com',
-    role: 'fleet_manager',
+  const storedUser = localStorage.getItem('transitops_user')
+  if (!storedUser) {
+    return null
+  }
+  try {
+    return JSON.parse(storedUser)
+  } catch {
+    return null
   }
 }

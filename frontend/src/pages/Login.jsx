@@ -34,10 +34,10 @@ export default function Login() {
     setLoading(true)
 
     try {
-      const data = await loginApi(email, password)
+      const data = await loginApi(email, password, roleSelection)
       login(
-        { name: data.user?.name || email.split('@')[0], email, ...data.user, role: roleSelection },
-        roleSelection,
+        { name: data.user?.name || email.split('@')[0], email, ...data.user, role: data.role || roleSelection },
+        data.role || roleSelection,
         data.token || data.access_token || 'demo-token'
       )
       success('Signed in successfully!')

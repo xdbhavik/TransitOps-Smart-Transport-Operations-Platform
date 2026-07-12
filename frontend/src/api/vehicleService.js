@@ -1,96 +1,97 @@
-import { mockDb } from './mockDb'
+import axiosInstance from './axiosInstance'
+import { apiErrorMessage, humanizeEnum, toNumber, toVehicleTypeEnum } from './backendTransforms'
+
+const mapVehicle = (vehicle) => ({
+  id: vehicle.vehicleId,
+  registration_number: vehicle.registrationNumber,
+  name: vehicle.vehicleName,
+  model: vehicle.model,
+  type: humanizeEnum(vehicle.type),
+  manufacturer: vehicle.manufacturer,
+  manufacturing_year: vehicle.manufacturingYear,
+  max_load_capacity: vehicle.maximumLoadCapacity,
+  odometer: vehicle.odometer,
+  acquisition_cost: vehicle.acquisitionCost,
+  current_value: vehicle.currentValue,
+  fuel_type: humanizeEnum(vehicle.fuelType),
+  fuel_tank_capacity: vehicle.fuelTankCapacity,
+  average_mileage: vehicle.averageMileage,
+  health_score: vehicle.healthScore,
+  total_carbon_emission: vehicle.totalCarbonEmission,
+  status: humanizeEnum(vehicle.status),
+})
+
+const buildVehicleRequest = (payload, existing = {}) => {
+  const typeValue = payload.type ?? existing.type
+  return {
+    registrationNumber: payload.registration_number ?? existing.registration_number,
+    vehicleName: payload.name ?? existing.name,
+    model: payload.model ?? existing.model ?? payload.name ?? existing.name,
+    type: typeValue ? toVehicleTypeEnum(typeValue) : undefined,
+    manufacturer: payload.manufacturer ?? existing.manufacturer ?? payload.name ?? existing.name,
+    manufacturingYear: toNumber(payload.manufacturing_year ?? existing.manufacturing_year),
+    maximumLoadCapacity: toNumber(payload.max_load_capacity ?? existing.max_load_capacity),
+    fuelType: payload.fuel_type ? String(payload.fuel_type).trim().toUpperCase() : existing.fuel_type ? String(existing.fuel_type).trim().toUpperCase() : undefined,
+    fuelTankCapacity: toNumber(payload.fuel_tank_capacity ?? existing.fuel_tank_capacity),
+    averageMileage: toNumber(payload.average_mileage ?? existing.average_mileage),
+    acquisitionCost: toNumber(payload.acquisition_cost ?? existing.acquisition_cost),
+  }
+}
 
 export const getVehicles = async (params = {}) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  let list = mockDb.getVehicles()
+  const { data } = await axiosInstance.get('/api/vehicles')
+  let list = Array.isArray(data) ? data.map(mapVehicle) : []
+
   if (params.status) {
-    list = list.filter(v => v.status === params.status)
+    list = list.filter((vehicle) => vehicle.status === params.status)
   }
   if (params.type) {
-    list = list.filter(v => v.type === params.type)
+    list = list.filter((vehicle) => vehicle.type === params.type)
   }
+
   return list
 }
 
 export const getVehicle = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 150))
-  const list = mockDb.getVehicles()
-  const item = list.find(v => String(v.id) === String(id))
-  if (!item) throw new Error('Vehicle not found')
-  return item
+  const { data } = await axiosInstance.get(`/api/vehicles/${id}`)
+  return mapVehicle(data)
 }
 
 export const createVehicle = async (payload) => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  const list = mockDb.getVehicles()
-  // Check unique registration number
-  if (list.some(v => v.registration_number === payload.registration_number)) {
-    throw new Error('Registration number already exists')
+  try {
+    const requestBody = buildVehicleRequest(payload)
+    const { data } = await axiosInstance.post('/api/vehicles', requestBody)
+    return await getVehicle(data.vehicleId)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to create vehicle'))
   }
-  const newV = {
-    id: list.length > 0 ? Math.max(...list.map(v => v.id)) + 1 : 1,
-    ...payload,
-    status: payload.status || 'Available',
-    max_load_capacity: Number(payload.max_load_capacity),
-    odometer: Number(payload.odometer),
-    acquisition_cost: Number(payload.acquisition_cost),
-  }
-  list.unshift(newV)
-  mockDb.saveVehicles(list)
-  return newV
 }
 
 export const updateVehicle = async (id, payload) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const list = mockDb.getVehicles()
-  const idx = list.findIndex(v => String(v.id) === String(id))
-  if (idx === -1) throw new Error('Vehicle not found')
-
-  const updated = {
-    ...list[idx],
-    ...payload,
-    max_load_capacity: Number(payload.max_load_capacity || list[idx].max_load_capacity),
-    odometer: Number(payload.odometer || list[idx].odometer),
-    acquisition_cost: Number(payload.acquisition_cost || list[idx].acquisition_cost),
+  try {
+    const existing = await getVehicle(id)
+    const requestBody = buildVehicleRequest(payload, existing)
+    await axiosInstance.put(`/api/vehicles/${id}`, requestBody)
+    return await getVehicle(id)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to update vehicle'))
   }
-  list[idx] = updated
-  mockDb.saveVehicles(list)
-  return updated
 }
 
 export const retireVehicle = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 200))
-  const list = mockDb.getVehicles()
-  const idx = list.findIndex(v => String(v.id) === String(id))
-  if (idx === -1) throw new Error('Vehicle not found')
-  list[idx].status = 'Retired'
-  mockDb.saveVehicles(list)
-  return list[idx]
+  try {
+    const { data } = await axiosInstance.patch(`/api/vehicles/${id}/status`, { status: 'RETIRED' })
+    return { id: data.vehicleId, status: 'Retired', message: data.message }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to retire vehicle'))
+  }
 }
 
 export const getAvailableVehicles = async () => {
-  return getVehicles({ status: 'Available' })
+  const { data } = await axiosInstance.get('/api/vehicles/available')
+  return Array.isArray(data) ? data.map(mapVehicle) : []
 }
 
-export const uploadVehicleDocument = async (id, fileObj) => {
-  await new Promise(resolve => setTimeout(resolve, 600))
-  const list = mockDb.getVehicles()
-  const idx = list.findIndex(v => String(v.id) === String(id))
-  if (idx === -1) throw new Error('Vehicle not found')
-
-  const doc = {
-    id: Date.now(),
-    name: fileObj.name || 'document.pdf',
-    type: fileObj.type || 'application/pdf',
-    size: fileObj.size || 1024,
-    upload_date: new Date().toISOString().split('T')[0]
-  }
-
-  const updated = {
-    ...list[idx],
-    documents: [...(list[idx].documents || []), doc]
-  }
-  list[idx] = updated
-  mockDb.saveVehicles(list)
-  return updated
+export const uploadVehicleDocument = async () => {
+  throw new Error('Vehicle document upload is not available in the backend yet')
 }

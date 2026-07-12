@@ -1,53 +1,72 @@
-import { mockDb } from './mockDb'
+import axiosInstance from './axiosInstance'
+import { apiErrorMessage, toDateOnly, toLocalDateTime, toNumber } from './backendTransforms'
+import { getVehicles } from './vehicleService'
+
+const mapFuelLog = (log, vehicleMap = {}) => {
+  const vehicle = vehicleMap[log.vehicleId] || vehicleMap[log.vehicle_id] || null
+  return {
+    id: log.fuelLogId,
+    vehicle_id: log.vehicleId || log.vehicle_id,
+    trip_id: log.tripId || log.trip_id,
+    date: toDateOnly(log.fuelDate || log.date),
+    liters: log.liters,
+    cost: log.cost,
+    fuel_station: log.fuelStation,
+    mileage: log.mileage,
+    vehicle,
+  }
+}
 
 export const getFuelLogs = async (params = {}) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  let list = mockDb.getFuel()
-  if (params.vehicle_id) {
-    list = list.filter(l => String(l.vehicle_id) === String(params.vehicle_id))
+  const vehicles = await getVehicles()
+  const vehicleMap = Object.fromEntries(vehicles.map((vehicle) => [vehicle.id, vehicle]))
+
+  const logs = []
+  for (const vehicle of vehicles) {
+    const { data } = await axiosInstance.get(`/api/fuel/history/${vehicle.id}`)
+    const vehicleLogs = Array.isArray(data) ? data.map((log) => mapFuelLog(log, vehicleMap)) : []
+    logs.push(...vehicleLogs)
   }
-  return list
+
+  let list = logs
+  if (params.vehicle_id) {
+    list = list.filter((log) => String(log.vehicle_id) === String(params.vehicle_id))
+  }
+  return list.sort((a, b) => String(b.date).localeCompare(String(a.date)))
 }
 
 export const getFuelLog = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 150))
-  const list = mockDb.getFuel()
-  const item = list.find(l => String(l.id) === String(id))
+  const logs = await getFuelLogs()
+  const item = logs.find((log) => String(log.id) === String(id))
   if (!item) throw new Error('Fuel log not found')
   return item
 }
 
 export const createFuelLog = async (payload) => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  const logs = mockDb.getFuel()
-  const vehicles = mockDb.getVehicles()
-  const vehicle = vehicles.find(v => String(v.id) === String(payload.vehicle_id))
+  try {
+    const { data } = await axiosInstance.post('/api/fuel', {
+      vehicleId: payload.vehicle_id,
+      tripId: payload.trip_id || undefined,
+      liters: toNumber(payload.liters),
+      cost: toNumber(payload.cost),
+      fuelStation: payload.fuel_station || 'TransitOps Fuel Station',
+    })
 
-  const newLog = {
-    id: logs.length > 0 ? Math.max(...logs.map(l => l.id)) + 1 : 1,
-    vehicle_id: Number(payload.vehicle_id),
-    date: payload.date,
-    liters: Number(payload.liters),
-    cost: Number(payload.cost),
-    vehicle: vehicle ? { id: vehicle.id, registration_number: vehicle.registration_number, name: vehicle.name } : null,
+    const vehicles = await getVehicles()
+    const vehicle = vehicles.find((item) => String(item.id) === String(payload.vehicle_id)) || null
+
+    return {
+      id: data.fuelLogId,
+      vehicle_id: payload.vehicle_id,
+      date: payload.date || new Date().toISOString().split('T')[0],
+      liters: toNumber(payload.liters),
+      cost: toNumber(payload.cost),
+      fuel_station: payload.fuel_station || 'TransitOps Fuel Station',
+      mileage: data.mileage,
+      vehicle,
+      created_at: toLocalDateTime(),
+    }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to create fuel log'))
   }
-
-  logs.unshift(newLog)
-  mockDb.saveFuel(logs)
-
-  // Also auto-add to operational expenses as a fuel expense (Miscellaneous/Toll/Maintenance, let's map to Miscellaneous or create/retain custom text)
-  const expenses = mockDb.getExpenses()
-  const newExpense = {
-    id: expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1,
-    vehicle_id: Number(payload.vehicle_id),
-    type: 'Miscellaneous', // Toll / Maintenance / Miscellaneous
-    date: payload.date,
-    amount: Number(payload.cost),
-    notes: `Fuel Log entry: ${Number(payload.liters)}L @ $${Number(payload.cost)}`,
-    vehicle: vehicle ? { id: vehicle.id, registration_number: vehicle.registration_number, name: vehicle.name } : null,
-  }
-  expenses.unshift(newExpense)
-  mockDb.saveExpenses(expenses)
-
-  return newLog
 }

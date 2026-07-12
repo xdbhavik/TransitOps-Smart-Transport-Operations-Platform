@@ -1,184 +1,207 @@
-import { mockDb } from './mockDb'
+import axiosInstance from './axiosInstance'
+import { apiErrorMessage, humanizeEnum, toLocalDateTime, toNumber } from './backendTransforms'
+
+const mapVehicle = (vehicle) => vehicle ? ({
+  id: vehicle.id,
+  registration_number: vehicle.registration_number,
+  name: vehicle.name,
+  max_load_capacity: vehicle.max_load_capacity,
+  odometer: vehicle.odometer,
+  status: vehicle.status,
+}) : null
+
+const mapDriver = (driver) => driver ? ({
+  id: driver.id,
+  name: driver.name,
+  license_number: driver.license_number,
+  license_expiry: driver.license_expiry,
+  status: driver.status,
+}) : null
+
+const mapTrip = (trip, vehicleMap = {}, driverMap = {}) => {
+  const vehicle = vehicleMap[trip.vehicleId] || vehicleMap[trip.vehicle_id] || null
+  const driver = driverMap[trip.driverId] || driverMap[trip.driver_id] || null
+
+  return {
+    id: trip.tripId,
+    trip_number: trip.tripNumber,
+    source: trip.source,
+    destination: trip.destination,
+    driver_id: trip.driverId,
+    vehicle_id: trip.vehicleId,
+    cargo_weight: trip.cargoWeight,
+    planned_distance: trip.plannedDistance,
+    actual_distance: trip.actualDistance,
+    scheduled_start: trip.scheduledStart,
+    scheduled_end: trip.scheduledEnd,
+    estimated_arrival: trip.estimatedArrival,
+    actual_end: trip.actualEnd,
+    fuel_consumed: trip.fuelConsumed,
+    status: humanizeEnum(trip.status),
+    created_at: trip.createdAt,
+    updated_at: trip.updatedAt,
+    vehicle_name: vehicle?.name || null,
+    driver_name: driver?.name || null,
+    vehicle: vehicle,
+    driver: driver,
+  }
+}
+
+const fetchEnrichmentMaps = async () => {
+  const [vehiclesResponse, driversResponse] = await Promise.all([
+    axiosInstance.get('/api/vehicles'),
+    axiosInstance.get('/drivers'),
+  ])
+
+  const vehicles = Array.isArray(vehiclesResponse.data) ? vehiclesResponse.data.map((vehicle) => ({
+    id: vehicle.vehicleId,
+    registration_number: vehicle.registrationNumber,
+    name: vehicle.vehicleName,
+    status: humanizeEnum(vehicle.status),
+    odometer: vehicle.odometer,
+    max_load_capacity: vehicle.maximumLoadCapacity,
+  })) : []
+  const drivers = Array.isArray(driversResponse.data) ? driversResponse.data.map((driver) => ({
+    id: driver.id,
+    name: driver.name,
+    status: driver.status,
+    license_number: driver.license_number,
+    license_expiry: driver.license_expiry,
+  })) : []
+
+  return {
+    vehicleMap: Object.fromEntries(vehicles.map((vehicle) => [vehicle.id, vehicle])),
+    driverMap: Object.fromEntries(drivers.map((driver) => [driver.id, driver])),
+  }
+}
+
+const buildTripRequest = (payload) => ({
+  source: payload.source,
+  destination: payload.destination,
+  driverId: payload.driver_id,
+  vehicleId: payload.vehicle_id,
+  cargoWeight: toNumber(payload.cargo_weight),
+  plannedDistance: toNumber(payload.planned_distance),
+  scheduledStart: payload.scheduled_start,
+  scheduledEnd: payload.scheduled_end,
+  estimatedArrival: payload.estimated_arrival,
+})
 
 export const getTrips = async (params = {}) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  let list = mockDb.getTrips()
-  if (params.status) {
-    list = list.filter(t => t.status === params.status)
+  const endpointMap = {
+    Dispatched: '/api/trips/active',
+    Completed: '/api/trips/completed',
+    Cancelled: '/api/trips/cancelled',
   }
+
+  const { data } = await axiosInstance.get(endpointMap[params.status] || '/api/trips')
+  const trips = Array.isArray(data) ? data : []
+  const { vehicleMap, driverMap } = await fetchEnrichmentMaps()
+  let list = trips.map((trip) => mapTrip(trip, vehicleMap, driverMap))
+
+  if (params.status) {
+    list = list.filter((trip) => trip.status === params.status)
+  }
+
   return list
 }
 
 export const getTrip = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 150))
-  const list = mockDb.getTrips()
-  const item = list.find(t => String(t.id) === String(id))
-  if (!item) throw new Error('Trip not found')
-  return item
+  const { data } = await axiosInstance.get(`/api/trips/${id}`)
+  const { vehicleMap, driverMap } = await fetchEnrichmentMaps()
+  return mapTrip(data, vehicleMap, driverMap)
 }
 
 export const createTrip = async (payload) => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  const trips = mockDb.getTrips()
-  const vehicles = mockDb.getVehicles()
-  const drivers = mockDb.getDrivers()
-
-  const vehicle = vehicles.find(v => String(v.id) === String(payload.vehicle_id))
-  const driver = drivers.find(d => String(d.id) === String(payload.driver_id))
-
-  const newTrip = {
-    id: trips.length > 0 ? Math.max(...trips.map(t => t.id)) + 1 : 1,
-    source: payload.source,
-    destination: payload.destination,
-    vehicle_id: Number(payload.vehicle_id),
-    driver_id: Number(payload.driver_id),
-    cargo_weight: Number(payload.cargo_weight),
-    planned_distance: Number(payload.planned_distance),
-    status: 'Draft',
-    vehicle_name: vehicle ? vehicle.name : 'Unknown Vehicle',
-    driver_name: driver ? driver.name : 'Unknown Driver',
+  try {
+    const { data } = await axiosInstance.post('/api/trips', buildTripRequest(payload))
+    return await getTrip(data.tripId)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to create trip'))
   }
-
-  trips.unshift(newTrip)
-  mockDb.saveTrips(trips)
-  return newTrip
 }
 
 export const updateTrip = async (id, payload) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const trips = mockDb.getTrips()
-  const idx = trips.findIndex(t => String(t.id) === String(id))
-  if (idx === -1) throw new Error('Trip not found')
-
-  const updated = {
-    ...trips[idx],
-    ...payload,
-    cargo_weight: Number(payload.cargo_weight || trips[idx].cargo_weight),
-    planned_distance: Number(payload.planned_distance || trips[idx].planned_distance),
+  try {
+    await axiosInstance.put(`/api/trips/${id}`, buildTripRequest(payload))
+    return await getTrip(id)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to update trip'))
   }
-  trips[idx] = updated
-  mockDb.saveTrips(trips)
-  return updated
 }
 
 export const dispatchTrip = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const trips = mockDb.getTrips()
-  const idx = trips.findIndex(t => String(t.id) === String(id))
-  if (idx === -1) throw new Error('Trip not found')
-
-  const trip = trips[idx]
-  trip.status = 'Dispatched'
-
-  // Update vehicle and driver status
-  const vehicles = mockDb.getVehicles()
-  const drivers = mockDb.getDrivers()
-
-  const vIdx = vehicles.findIndex(v => String(v.id) === String(trip.vehicle_id))
-  if (vIdx !== -1) {
-    vehicles[vIdx].status = 'On Trip'
-    mockDb.saveVehicles(vehicles)
+  try {
+    await axiosInstance.post(`/api/trips/${id}/dispatch`, {
+      dispatchTime: toLocalDateTime(),
+    })
+    return await getTrip(id)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to dispatch trip'))
   }
-
-  const dIdx = drivers.findIndex(d => String(d.id) === String(trip.driver_id))
-  if (dIdx !== -1) {
-    drivers[dIdx].status = 'On Trip'
-    mockDb.saveDrivers(drivers)
-  }
-
-  mockDb.saveTrips(trips)
-  return trip
 }
 
 export const completeTrip = async (id, payload) => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  const trips = mockDb.getTrips()
-  const idx = trips.findIndex(t => String(t.id) === String(id))
-  if (idx === -1) throw new Error('Trip not found')
+  try {
+    const trip = await getTrip(id)
+    const currentVehicle = trip.vehicle || (await axiosInstance.get(`/api/vehicles/${trip.vehicle_id}`)).data
+    const currentOdometer = currentVehicle?.odometer ?? 0
+    const finalOdometer = toNumber(payload.final_odometer)
+    if (finalOdometer == null) {
+      throw new Error('Final odometer is required')
+    }
 
-  const trip = trips[idx]
-  trip.status = 'Completed'
-  trip.final_odometer = Number(payload.final_odometer)
-  trip.fuel_consumed = Number(payload.fuel_consumed)
+    const actualDistance = finalOdometer >= currentOdometer ? finalOdometer - currentOdometer : finalOdometer
 
-  // Revert vehicle and driver status to Available
-  const vehicles = mockDb.getVehicles()
-  const drivers = mockDb.getDrivers()
+    await axiosInstance.post(`/api/trips/${id}/complete`, {
+      actualDistance,
+      fuelConsumed: toNumber(payload.fuel_consumed),
+      actualEnd: toLocalDateTime(),
+    })
 
-  const vIdx = vehicles.findIndex(v => String(v.id) === String(trip.vehicle_id))
-  if (vIdx !== -1) {
-    vehicles[vIdx].status = 'Available'
-    // Update odometer to final reading
-    vehicles[vIdx].odometer = Number(payload.final_odometer)
-    mockDb.saveVehicles(vehicles)
+    return await getTrip(id)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to complete trip'))
   }
-
-  const dIdx = drivers.findIndex(d => String(d.id) === String(trip.driver_id))
-  if (dIdx !== -1) {
-    drivers[dIdx].status = 'Available'
-    mockDb.saveDrivers(drivers)
-  }
-
-  // Auto-generate fuel log entry
-  const fuelLogs = mockDb.getFuel()
-  const vehicle = vehicles.find(v => String(v.id) === String(trip.vehicle_id))
-  const newFuelLog = {
-    id: fuelLogs.length > 0 ? Math.max(...fuelLogs.map(f => f.id)) + 1 : 1,
-    vehicle_id: trip.vehicle_id,
-    date: new Date().toISOString().split('T')[0],
-    liters: Number(payload.fuel_consumed),
-    cost: Math.round(Number(payload.fuel_consumed) * 2.15), // Estimating cost/liter
-    vehicle: vehicle ? { id: vehicle.id, registration_number: vehicle.registration_number, name: vehicle.name } : null,
-  }
-  fuelLogs.unshift(newFuelLog)
-  mockDb.saveFuel(fuelLogs)
-
-  // Auto-generate operational expense entry for Fuel
-  const expenses = mockDb.getExpenses()
-  const newExpense = {
-    id: expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1,
-    vehicle_id: trip.vehicle_id,
-    type: 'Miscellaneous',
-    date: new Date().toISOString().split('T')[0],
-    amount: newFuelLog.cost,
-    notes: `Fuel cost for Completed Trip #${trip.id}`,
-    vehicle: vehicle ? { id: vehicle.id, registration_number: vehicle.registration_number, name: vehicle.name } : null,
-  }
-  expenses.unshift(newExpense)
-  mockDb.saveExpenses(expenses)
-
-  mockDb.saveTrips(trips)
-  return trip
 }
 
 export const cancelTrip = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const trips = mockDb.getTrips()
-  const idx = trips.findIndex(t => String(t.id) === String(id))
-  if (idx === -1) throw new Error('Trip not found')
-
-  const trip = trips[idx]
-  const oldStatus = trip.status
-  trip.status = 'Cancelled'
-
-  // Revert vehicle/driver to Available if dispatched
-  if (oldStatus === 'Dispatched') {
-    const vehicles = mockDb.getVehicles()
-    const drivers = mockDb.getDrivers()
-
-    const vIdx = vehicles.findIndex(v => String(v.id) === String(trip.vehicle_id))
-    if (vIdx !== -1) {
-      vehicles[vIdx].status = 'Available'
-      mockDb.saveVehicles(vehicles)
-    }
-
-    const dIdx = drivers.findIndex(d => String(d.id) === String(trip.driver_id))
-    if (dIdx !== -1) {
-      drivers[dIdx].status = 'Available'
-      mockDb.saveDrivers(drivers)
-    }
+  try {
+    await axiosInstance.post(`/api/trips/${id}/cancel`, {
+      reason: 'Cancelled from frontend',
+      cancelledAt: toLocalDateTime(),
+    })
+    return await getTrip(id)
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to cancel trip'))
   }
+}
 
-  mockDb.saveTrips(trips)
-  return trip
+export const addTracking = async (id, payload) => {
+  try {
+    const { data } = await axiosInstance.post(`/api/trips/${id}/tracking`, payload)
+    return data
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to update trip tracking'))
+  }
+}
+
+export const getTripTracking = async (id) => {
+  const { data } = await axiosInstance.get(`/api/trips/${id}/tracking`)
+  return Array.isArray(data) ? data : []
+}
+
+export const getTripLocation = async (id) => {
+  const { data } = await axiosInstance.get(`/api/trips/${id}/location`)
+  return data
+}
+
+export const getTripEta = async (id) => {
+  const { data } = await axiosInstance.get(`/api/trips/${id}/eta`)
+  return data
+}
+
+export const getTripAnalytics = async () => {
+  const { data } = await axiosInstance.get('/api/trips/analytics')
+  return data
 }

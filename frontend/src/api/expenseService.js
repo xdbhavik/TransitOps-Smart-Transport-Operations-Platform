@@ -1,57 +1,103 @@
-import { mockDb } from './mockDb'
+import axiosInstance from './axiosInstance'
+import { apiErrorMessage, humanizeEnum, toDateOnly, toLocalDateTime, toNumber, toExpenseTypeEnum } from './backendTransforms'
+import { getTrips } from './tripService'
+import { getVehicles } from './vehicleService'
+
+const mapExpense = (expense, vehicleMap = {}, tripMap = {}) => {
+  const vehicle = vehicleMap[expense.vehicleId] || vehicleMap[expense.vehicle_id] || null
+  const trip = tripMap[expense.tripId] || tripMap[expense.trip_id] || null
+
+  return {
+    id: expense.id,
+    vehicle_id: expense.vehicleId,
+    trip_id: expense.tripId,
+    type: humanizeEnum(expense.expenseType || expense.type),
+    date: toDateOnly(expense.expenseDate || expense.date),
+    amount: expense.amount,
+    notes: expense.description || expense.notes,
+    vehicle,
+    trip,
+  }
+}
+
+const buildExpenseRequest = async (payload) => {
+  const trips = await getTrips()
+  const matchingTrips = trips.filter((trip) => String(trip.vehicle_id) === String(payload.vehicle_id))
+  const tripId = payload.trip_id || matchingTrips[0]?.id || trips[0]?.id
+
+  return {
+    vehicleId: payload.vehicle_id,
+    tripId,
+    expenseType: toExpenseTypeEnum(payload.type),
+    amount: toNumber(payload.amount),
+    description: payload.notes,
+    expenseDate: payload.date,
+  }
+}
 
 export const getExpenses = async (params = {}) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  let list = mockDb.getExpenses()
+  const [vehicles, trips, response] = await Promise.all([
+    getVehicles(),
+    getTrips(),
+    axiosInstance.get('/api/expenses'),
+  ])
+
+  const vehicleMap = Object.fromEntries(vehicles.map((vehicle) => [vehicle.id, vehicle]))
+  const tripMap = Object.fromEntries(trips.map((trip) => [trip.id, trip]))
+  let list = Array.isArray(response.data) ? response.data.map((expense) => mapExpense(expense, vehicleMap, tripMap)) : []
+
   if (params.vehicle_id) {
-    list = list.filter(e => String(e.vehicle_id) === String(params.vehicle_id))
+    list = list.filter((expense) => String(expense.vehicle_id) === String(params.vehicle_id))
   }
   return list
 }
 
 export const getExpense = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 150))
-  const list = mockDb.getExpenses()
-  const item = list.find(e => String(e.id) === String(id))
+  const expenses = await getExpenses()
+  const item = expenses.find((expense) => String(expense.id) === String(id))
   if (!item) throw new Error('Expense not found')
   return item
 }
 
 export const createExpense = async (payload) => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  const list = mockDb.getExpenses()
-  const vehicles = mockDb.getVehicles()
-  const vehicle = vehicles.find(v => String(v.id) === String(payload.vehicle_id))
+  try {
+    const requestBody = await buildExpenseRequest(payload)
+    const { data } = await axiosInstance.post('/api/expenses', requestBody)
+    const vehicles = await getVehicles()
+    const trips = await getTrips()
+    const vehicle = vehicles.find((item) => String(item.id) === String(payload.vehicle_id)) || null
+    const trip = trips.find((item) => String(item.id) === String(data.tripId)) || null
 
-  const newE = {
-    id: list.length > 0 ? Math.max(...list.map(e => e.id)) + 1 : 1,
-    vehicle_id: Number(payload.vehicle_id),
-    type: payload.type,
-    date: payload.date,
-    amount: Number(payload.amount),
-    notes: payload.notes,
-    vehicle: vehicle ? { id: vehicle.id, registration_number: vehicle.registration_number, name: vehicle.name } : null,
+    return {
+      id: data.id,
+      vehicle_id: data.vehicleId,
+      trip_id: data.tripId,
+      type: humanizeEnum(data.expenseType),
+      date: toDateOnly(data.expenseDate),
+      amount: data.amount,
+      notes: data.description,
+      vehicle,
+      trip,
+      created_at: data.createdAt,
+      updated_at: data.updatedAt,
+    }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to create expense'))
   }
-  list.unshift(newE)
-  mockDb.saveExpenses(list)
-  return newE
 }
 
 export const getOperationalCostSummary = async () => {
-  await new Promise(resolve => setTimeout(resolve, 200))
-  const expenses = mockDb.getExpenses()
-  const vehicles = mockDb.getVehicles()
+  const [expenses, vehicles] = await Promise.all([getExpenses(), getVehicles()])
+  return vehicles.map((vehicle) => {
+    const totalExpense = expenses
+      .filter((expense) => String(expense.vehicle_id) === String(vehicle.id))
+      .reduce((sum, expense) => sum + (Number(expense.amount) || 0), 0)
 
-  const summary = vehicles.map(v => {
-    const totalExp = expenses
-      .filter(e => String(e.vehicle_id) === String(v.id))
-      .reduce((sum, e) => sum + e.amount, 0)
     return {
-      vehicle_id: v.id,
-      registration_number: v.registration_number,
-      name: v.name,
-      total_cost: totalExp,
+      vehicle_id: vehicle.id,
+      registration_number: vehicle.registration_number,
+      name: vehicle.name,
+      total_cost: totalExpense,
     }
   })
-  return summary
 }

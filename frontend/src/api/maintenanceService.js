@@ -1,83 +1,80 @@
-import { mockDb } from './mockDb'
+import axiosInstance from './axiosInstance'
+import { apiErrorMessage, humanizeEnum, toDateOnly } from './backendTransforms'
+
+const mapVehicle = (vehicle) => vehicle ? ({
+  id: vehicle.vehicleId || vehicle.id,
+  registration_number: vehicle.registrationNumber || vehicle.registration_number,
+  name: vehicle.vehicleName || vehicle.name,
+  status: humanizeEnum(vehicle.status),
+}) : null
+
+const mapMaintenance = (record) => ({
+  id: record.maintenanceCode || record.id,
+  vehicle_id: record.vehicle?.vehicleId || record.vehicle?.id || record.vehicleId,
+  type_of_work: record.description || record.type_of_work || record.maintenanceType,
+  notes: record.description || record.notes,
+  date_created: toDateOnly(record.maintenanceDate || record.createdAt || record.date_created),
+  status: record.status === 'COMPLETED' || record.status === 'Closed' ? 'Closed' : 'Open',
+  vehicle: mapVehicle(record.vehicle),
+  vehicle_status: humanizeEnum(record.vehicleStatus),
+})
 
 export const getMaintenanceRecords = async (params = {}) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  let list = mockDb.getMaintenance()
+  const { data } = await axiosInstance.get('/api/maintenance')
+  let list = Array.isArray(data) ? data.map(mapMaintenance) : []
   if (params.status) {
-    list = list.filter(r => r.status === params.status)
+    list = list.filter((record) => record.status === params.status)
   }
   return list
 }
 
 export const getMaintenance = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 150))
-  const list = mockDb.getMaintenance()
-  const item = list.find(r => String(r.id) === String(id))
+  const records = await getMaintenanceRecords()
+  const item = records.find((record) => String(record.id) === String(id))
   if (!item) throw new Error('Record not found')
   return item
 }
 
 export const createMaintenance = async (payload) => {
-  await new Promise(resolve => setTimeout(resolve, 400))
-  const records = mockDb.getMaintenance()
-  const vehicles = mockDb.getVehicles()
+  try {
+    const { data } = await axiosInstance.post('/api/maintenance', {
+      vehicleId: payload.vehicle_id,
+      maintenanceType: 'ROUTINE',
+      description: payload.type_of_work,
+      serviceCenter: payload.notes || 'TransitOps Workshop',
+      cost: 0,
+    })
 
-  const vehicle = vehicles.find(v => String(v.id) === String(payload.vehicle_id))
+    const vehicles = await axiosInstance.get('/api/vehicles')
+    const vehicleList = Array.isArray(vehicles.data) ? vehicles.data : []
+    const vehicle = vehicleList.find((item) => String(item.vehicleId) === String(payload.vehicle_id)) || null
 
-  const newRecord = {
-    id: records.length > 0 ? Math.max(...records.map(r => r.id)) + 1 : 1,
-    vehicle_id: Number(payload.vehicle_id),
-    type_of_work: payload.type_of_work,
-    notes: payload.notes,
-    date_created: payload.date_created || new Date().toISOString().split('T')[0],
-    status: 'Open',
-    vehicle: vehicle ? { id: vehicle.id, registration_number: vehicle.registration_number, name: vehicle.name } : null,
+    const created = {
+      id: data.maintenanceId,
+      vehicle_id: payload.vehicle_id,
+      type_of_work: payload.type_of_work,
+      notes: payload.notes,
+      date_created: new Date().toISOString().split('T')[0],
+      status: 'Open',
+      vehicle_status: data.vehicleStatus,
+      vehicle: vehicle ? {
+        id: vehicle.vehicleId,
+        registration_number: vehicle.registrationNumber,
+        name: vehicle.vehicleName,
+      } : null,
+    }
+
+    return created
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to create maintenance record'))
   }
-
-  // Update vehicle status to In Shop
-  const vIdx = vehicles.findIndex(v => String(v.id) === String(payload.vehicle_id))
-  if (vIdx !== -1) {
-    vehicles[vIdx].status = 'In Shop'
-    mockDb.saveVehicles(vehicles)
-  }
-
-  records.unshift(newRecord)
-  mockDb.saveMaintenance(records)
-  return newRecord
 }
 
 export const closeMaintenance = async (id) => {
-  await new Promise(resolve => setTimeout(resolve, 300))
-  const records = mockDb.getMaintenance()
-  const idx = records.findIndex(r => String(r.id) === String(id))
-  if (idx === -1) throw new Error('Record not found')
-
-  const record = records[idx]
-  record.status = 'Closed'
-
-  // Update vehicle status back to Available (unless Retired)
-  const vehicles = mockDb.getVehicles()
-  const vIdx = vehicles.findIndex(v => String(v.id) === String(record.vehicle_id))
-  if (vIdx !== -1 && vehicles[vIdx].status !== 'Retired') {
-    vehicles[vIdx].status = 'Available'
-    mockDb.saveVehicles(vehicles)
+  try {
+    const { data } = await axiosInstance.patch(`/api/maintenance/${id}/complete`)
+    return { id: data.maintenanceId, status: 'Closed', vehicle_status: data.vehicleStatus, message: data.message }
+  } catch (error) {
+    throw new Error(apiErrorMessage(error, 'Failed to close maintenance record'))
   }
-
-  // Add a maintenance expense automatically
-  const expenses = mockDb.getExpenses()
-  const vehicle = vehicles.find(v => String(v.id) === String(record.vehicle_id))
-  const newExpense = {
-    id: expenses.length > 0 ? Math.max(...expenses.map(e => e.id)) + 1 : 1,
-    vehicle_id: record.vehicle_id,
-    type: 'Maintenance',
-    date: new Date().toISOString().split('T')[0],
-    amount: Math.floor(200 + Math.random() * 800), // Random maintenance cost
-    notes: `Close Maintenance record #${record.id}: ${record.type_of_work}`,
-    vehicle: vehicle ? { id: vehicle.id, registration_number: vehicle.registration_number, name: vehicle.name } : null,
-  }
-  expenses.unshift(newExpense)
-  mockDb.saveExpenses(expenses)
-
-  mockDb.saveMaintenance(records)
-  return record
 }
