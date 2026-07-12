@@ -1,4 +1,4 @@
 package com.Transitops.odoo.entity;
 
-public enum Role {
+public enum RoleName {
 }
