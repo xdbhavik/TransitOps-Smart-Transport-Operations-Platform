@@ -243,6 +243,11 @@
     opacity: 0.5;
   }
 
+  select option {
+    background-color: var(--color-surface-container);
+    color: var(--color-on-surface);
+  }
+
   ::selection { background: color-mix(in srgb, var(--color-primary) 30%, transparent); color: var(--color-on-surface); }
 }
 

@@ -19,7 +19,7 @@ const ROLE_BADGE_CLASSES = {
   financial_analyst: 'bg-error/10 text-error border-error/20',
 }
 
-export function Header() {
+export function Header({ sidebarOpen, onToggleSidebar }) {
   const { user, role } = useAuth()
   const location = useLocation()
   const page = PAGE_TITLES[location.pathname] || { title: 'TransitOps', icon: 'home' }
@@ -27,30 +27,24 @@ export function Header() {
   const badgeClass = ROLE_BADGE_CLASSES[role] || 'bg-secondary/10 text-secondary border-secondary/20'
 
   return (
-    <header className="flex justify-between items-center h-16 px-6 border-b border-outline-variant bg-surface-container fixed top-0 right-0 left-64 z-40">
+    <header className={`flex justify-between items-center h-16 px-6 border-b border-outline-variant bg-surface-container fixed top-0 right-0 transition-all duration-300 ${sidebarOpen ? 'left-64' : 'left-0'} z-40`}>
       {/* Page context */}
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-2">
+        <button
+          onClick={onToggleSidebar}
+          className="mr-1 w-8 h-8 flex items-center justify-center rounded-md hover:bg-surface-container-high transition-colors"
+          title={sidebarOpen ? 'Collapse Sidebar' : 'Expand Sidebar'}
+        >
+          <span className="material-symbols-outlined text-on-surface-variant text-[20px]">
+            {sidebarOpen ? 'menu_open' : 'menu'}
+          </span>
+        </button>
         <span className="material-symbols-outlined text-on-surface-variant text-[20px]">{page.icon}</span>
         <h2 className="font-display font-bold text-on-surface tracking-tight">{page.title}</h2>
       </div>
 
-      {/* User info */}
+      {/* Right side is kept blank to unify profile view in the sidebar */}
       <div className="flex items-center gap-3">
-        {user && (
-          <div className="flex items-center gap-3">
-            <div className="hidden md:flex flex-col items-end">
-              <span className="text-sm font-bold text-on-surface">
-                {user.name || user.email || 'User'}
-              </span>
-              <span className={`text-xs px-2 py-0.5 rounded-full border font-semibold ${badgeClass}`}>
-                {user.roleLabel}
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-primary/20 border border-primary/30 flex items-center justify-center flex-shrink-0">
-              <span className="material-symbols-outlined text-primary text-[18px]">person</span>
-            </div>
-          </div>
-        )}
       </div>
     </header>
   )

@@ -27,7 +27,7 @@ const ROLE_NAV = {
   ],
 }
 
-export function Sidebar() {
+export function Sidebar({ isOpen }) {
   const { role, user, logout } = useAuth()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
@@ -39,14 +39,12 @@ export function Sidebar() {
   }
 
   return (
-    <nav className="flex flex-col h-screen fixed left-0 top-0 w-64 border-r border-outline-variant bg-surface-container-lowest z-50">
+    <nav className={`flex flex-col h-screen fixed left-0 top-0 w-64 border-r border-outline-variant bg-surface-container-lowest z-50 transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
       {/* Brand Header */}
       <div className="px-6 py-5 border-b border-outline-variant/50">
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-primary rounded-md flex items-center justify-center flex-shrink-0">
-            <span className="material-symbols-outlined text-on-primary text-[18px]" style={{ fontVariationSettings: "'FILL' 1" }}>
-              local_shipping
-            </span>
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 shadow-sm overflow-hidden">
+            <img src="/logo.jpg" alt="Logo" className="w-full h-full object-cover" />
           </div>
           <div>
             <h1 className="font-display font-black text-base tracking-tighter text-on-surface">TransitOps</h1>

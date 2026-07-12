@@ -14,8 +14,8 @@ const ROLES = [
 
 export default function Login() {
   const [roleSelection, setRoleSelection] = useState('fleet_manager')
-  const [email, setEmail] = useState('fleet@transitops.com')
-  const [password, setPassword] = useState('password123')
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
@@ -36,8 +36,8 @@ export default function Login() {
     try {
       const data = await loginApi(email, password)
       login(
-        { name: data.user?.name || email.split('@')[0], email, ...data.user },
-        data.user?.role,
+        { name: data.user?.name || email.split('@')[0], email, ...data.user, role: roleSelection },
+        roleSelection,
         data.token || data.access_token || 'demo-token'
       )
       success('Signed in successfully!')
@@ -56,9 +56,6 @@ export default function Login() {
     <div className="w-full">
       {/* Form Header */}
       <div className="mb-10 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-container text-primary mb-4">
-          <span className="material-symbols-outlined text-3xl">directions_bus</span>
-        </div>
         <h2 className="text-3xl font-extrabold text-on-surface mb-2 tracking-tight">
           Operations Portal
         </h2>
@@ -78,7 +75,7 @@ export default function Login() {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Role Selection */}
         <div>
-          <label htmlFor="role" className="form-label">Role (RBAC)</label>
+          <label htmlFor="role" className="form-label">Role</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="material-symbols-outlined text-on-surface-variant text-[18px]">badge</span>
@@ -87,13 +84,7 @@ export default function Login() {
               id="role"
               value={roleSelection}
               onChange={(e) => {
-                const selected = e.target.value
-                setRoleSelection(selected)
-                const roleObj = ROLES.find(r => r.value === selected)
-                if (roleObj) {
-                  setEmail(roleObj.email)
-                  setPassword('password123')
-                }
+                setRoleSelection(e.target.value)
               }}
               className="form-input pl-10 appearance-none bg-surface-container border border-outline-variant rounded-md text-sm h-11 w-full focus:ring-2 focus:ring-primary focus:border-primary text-on-surface"
             >
