@@ -9,7 +9,6 @@ import com.Transitops.odoo.service.DriverService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -23,7 +22,6 @@ public class DriverController {
     private final DriverService driverService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('SAFETY_OFFICER', 'ADMIN')")
     public ResponseEntity<DriverResponse> registerDriver(@RequestBody DriverRequest request) {
         DriverResponse response = driverService.registerDriver(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
@@ -40,13 +38,11 @@ public class DriverController {
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SAFETY_OFFICER', 'ADMIN')")
     public ResponseEntity<DriverResponse> updateDriver(@PathVariable String id, @RequestBody DriverRequest request) {
         return ResponseEntity.ok(driverService.updateDriver(id, request));
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('SAFETY_OFFICER', 'ADMIN')")
     public ResponseEntity<Void> deleteDriver(@PathVariable String id) {
         driverService.deleteDriver(id);
         return ResponseEntity.noContent().build();
