@@ -6,15 +6,16 @@ import { loginApi } from '../api/authService'
 
 
 const ROLES = [
-  { value: 'fleet_manager', label: 'Fleet Manager', email: 'fleet@transitops.com' },
-  { value: 'driver', label: 'Driver (Dispatcher)', email: 'driver@transitops.com' },
-  { value: 'safety_officer', label: 'Safety Officer', email: 'safety@transitops.com' },
-  { value: 'financial_analyst', label: 'Financial Analyst', email: 'finance@transitops.com' },
+  { value: 'admin', label: 'Admin', email: 'seed.admin@transitops.local' },
+  { value: 'fleet_manager', label: 'Fleet Manager', email: 'seed.fleet@transitops.local' },
+  { value: 'driver', label: 'Driver (Dispatcher)', email: 'seed.dispatcher@transitops.local' },
+  { value: 'safety_officer', label: 'Safety Officer', email: 'seed.safety@transitops.local' },
+  { value: 'financial_analyst', label: 'Financial Analyst', email: 'seed.finance@transitops.local' },
 ]
 
 export default function Login() {
   const [roleSelection, setRoleSelection] = useState('fleet_manager')
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState(ROLES.find(r => r.value === 'fleet_manager')?.email || '')
   const [password, setPassword] = useState('')
   const [showPassword, setShowPassword] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -85,6 +86,10 @@ export default function Login() {
               value={roleSelection}
               onChange={(e) => {
                 setRoleSelection(e.target.value)
+                const selected = ROLES.find(role => role.value === e.target.value)
+                if (selected?.email) {
+                  setEmail(selected.email)
+                }
               }}
               className="form-input pl-10 appearance-none bg-surface-container border border-outline-variant rounded-md text-sm h-11 w-full focus:ring-2 focus:ring-primary focus:border-primary text-on-surface"
             >
@@ -109,7 +114,7 @@ export default function Login() {
               type="email"
               value={email}
               onChange={e => setEmail(e.target.value)}
-              placeholder="admin@transitops.com"
+              placeholder="seed.fleet@transitops.local"
               required
               className="form-input pl-10"
             />

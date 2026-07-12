@@ -3,6 +3,7 @@ import { createContext, useContext, useState, useEffect } from 'react'
 const AuthContext = createContext(null)
 
 const ROLE_LABELS = {
+  admin: 'Admin',
   fleet_manager: 'Fleet Manager',
   driver: 'Driver',
   safety_officer: 'Safety Officer',

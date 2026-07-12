@@ -3,6 +3,16 @@ import { useAuth } from '../contexts/AuthContext'
 import { useTheme } from '../contexts/ThemeContext'
 
 const ROLE_NAV = {
+  admin: [
+    { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
+    { path: '/vehicles', label: 'Vehicle Registry', icon: 'local_shipping' },
+    { path: '/drivers', label: 'Driver Management', icon: 'badge' },
+    { path: '/trips', label: 'Trip Dispatch', icon: 'route' },
+    { path: '/maintenance', label: 'Maintenance', icon: 'build' },
+    { path: '/fuel', label: 'Fuel', icon: 'local_gas_station' },
+    { path: '/expenses', label: 'Expenses', icon: 'receipt_long' },
+    { path: '/reports', label: 'Reports & Analytics', icon: 'analytics' },
+  ],
   fleet_manager: [
     { path: '/dashboard', label: 'Dashboard', icon: 'dashboard' },
     { path: '/vehicles', label: 'Vehicle Registry', icon: 'local_shipping' },
