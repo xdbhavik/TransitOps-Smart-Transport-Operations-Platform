@@ -25,6 +25,9 @@ public class Maintenance {
     @EqualsAndHashCode.Include
     private String id;
 
+    @Column(name = "maintenance_code", nullable = false, unique = true)
+    private String maintenanceCode;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicle_id", nullable = false)
     private Vehicle vehicle;

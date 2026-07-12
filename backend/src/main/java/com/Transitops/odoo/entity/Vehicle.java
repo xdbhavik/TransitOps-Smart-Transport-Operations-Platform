@@ -35,6 +35,9 @@ public class Vehicle {
     @Column(name = "vehicle_name", nullable = false)
     private String vehicleName;
 
+    @Column(nullable = false)
+    private String model;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private VehicleType type;
@@ -104,6 +107,14 @@ public class Vehicle {
 
         if (status == null) {
             status = VehicleStatus.AVAILABLE;
+        }
+
+        if (healthScore == null) {
+            healthScore = 100;
+        }
+
+        if (currentValue == null) {
+            currentValue = acquisitionCost;
         }
     }
 
