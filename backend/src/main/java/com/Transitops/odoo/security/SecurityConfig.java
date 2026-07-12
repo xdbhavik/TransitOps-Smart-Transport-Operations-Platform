@@ -51,7 +51,7 @@ public class SecurityConfig {
                     .requestMatchers("/api/trips", "/api/trips/**").hasAnyRole("ADMIN", "FLEET_MANAGER", "DISPATCHER", "SAFETY_OFFICER", "FINANCIAL_ANALYST")
                     .requestMatchers("/api/maintenance/**").hasAnyRole("ADMIN", "FLEET_MANAGER", "SAFETY_OFFICER")
                     .requestMatchers("/api/fuel/**").hasAnyRole("ADMIN", "FLEET_MANAGER", "DISPATCHER", "FINANCIAL_ANALYST")
-                    .requestMatchers("/api/expenses", "/api/expenses/**").hasAnyRole("ADMIN", "FINANCIAL_ANALYST")
+                    .requestMatchers("/api/expenses", "/api/expenses/**").hasAnyRole("ADMIN", "FLEET_MANAGER", "FINANCIAL_ANALYST")
                         .requestMatchers("/ws-chat/**").permitAll()
                         .anyRequest().authenticated()              // baaki sab authenticated hone chahiye
                 )
