@@ -121,7 +121,7 @@ export default function Fuel() {
         </div>
       </PageHeader>
 
-      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No fuel logs found" emptyIcon="local_gas_station" />
+      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No fuel logs found" emptyIcon="local_gas_station" pageSize={5} />
 
       {/* Log Fuel Modal */}
       <Modal isOpen={modalOpen} onClose={() => setModalOpen(false)} title="Log Fuel Record" size="sm">

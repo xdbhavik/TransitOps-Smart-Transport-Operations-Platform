@@ -157,7 +157,7 @@ export default function Maintenance() {
         </select>
       </PageHeader>
 
-      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No maintenance records" emptyIcon="build" />
+      <DataTable columns={columns} data={filtered} loading={loading} error={error} emptyMessage="No maintenance records" emptyIcon="build" pageSize={5} />
 
       {/* Add Modal */}
       <Modal isOpen={modalMode === 'add'} onClose={closeModal} title="Add Maintenance Record" size="md">
