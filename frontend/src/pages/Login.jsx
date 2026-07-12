@@ -56,9 +56,6 @@ export default function Login() {
     <div className="w-full">
       {/* Form Header */}
       <div className="mb-10 text-center">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary-container text-primary mb-4">
-          <span className="material-symbols-outlined text-3xl">directions_bus</span>
-        </div>
         <h2 className="text-3xl font-extrabold text-on-surface mb-2 tracking-tight">
           Operations Portal
         </h2>
@@ -78,7 +75,7 @@ export default function Login() {
       <form onSubmit={handleSubmit} className="space-y-5">
         {/* Role Selection */}
         <div>
-          <label htmlFor="role" className="form-label">Role (RBAC)</label>
+          <label htmlFor="role" className="form-label">Role</label>
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
               <span className="material-symbols-outlined text-on-surface-variant text-[18px]">badge</span>
