@@ -1,0 +1,128 @@
+/** @type {import('tailwindcss').Config} */
+export default {
+  content: [
+    "./index.html",
+    "./src/**/*.{js,ts,jsx,tsx}",
+  ],
+  darkMode: "class",
+  theme: {
+    extend: {
+      colors: {
+        // Obsidian Design System — TransitOps
+        "primary": "#a78bfa",
+        "primary-container": "#7c3aed",
+        "primary-fixed": "#ede9fe",
+        "primary-fixed-dim": "#c4b5fd",
+        "on-primary": "#0a0012",
+        "on-primary-fixed": "#2e1065",
+        "on-primary-container": "#ede9fe",
+        "on-primary-fixed-variant": "#5b21b6",
+        "inverse-primary": "#5b21b6",
+        "surface-tint": "#a78bfa",
+
+        "secondary": "#71717a",
+        "secondary-container": "#27272a",
+        "secondary-fixed": "#a1a1aa",
+        "secondary-fixed-dim": "#71717a",
+        "on-secondary": "#09090b",
+        "on-secondary-container": "#a1a1aa",
+        "on-secondary-fixed": "#18181b",
+        "on-secondary-fixed-variant": "#3f3f46",
+
+        "tertiary": "#34d399",
+        "tertiary-container": "#065f46",
+        "tertiary-fixed": "#bbf7d0",
+        "tertiary-fixed-dim": "#6ee7b7",
+        "on-tertiary": "#001a12",
+        "on-tertiary-container": "#bbf7d0",
+        "on-tertiary-fixed": "#003318",
+        "on-tertiary-fixed-variant": "#047857",
+
+        "background": "#09090b",
+        "on-background": "#fafafa",
+
+        "surface": "#0c0c0f",
+        "surface-dim": "#0c0c0f",
+        "surface-bright": "#18181b",
+        "surface-variant": "#18181b",
+        "surface-container-lowest": "#09090b",
+        "surface-container-low": "#0f0f12",
+        "surface-container": "#121215",
+        "surface-container-high": "#18181b",
+        "surface-container-highest": "#1e1e22",
+        "on-surface": "#fafafa",
+        "on-surface-variant": "#a1a1aa",
+        "inverse-surface": "#fafafa",
+        "inverse-on-surface": "#09090b",
+
+        "outline": "#52525b",
+        "outline-variant": "#27272a",
+
+        "error": "#ef4444",
+        "error-container": "#3b1111",
+        "on-error": "#1a0000",
+        "on-error-container": "#fca5a5",
+      },
+      borderRadius: {
+        DEFAULT: "0.25rem",
+        sm: "0.125rem",
+        md: "0.375rem",
+        lg: "0.5rem",
+        xl: "0.75rem",
+        "2xl": "1rem",
+        full: "9999px",
+      },
+      spacing: {
+        xs: "4px",
+        sm: "8px",
+        md: "16px",
+        lg: "24px",
+        xl: "40px",
+        "container-margin": "24px",
+        "gutter": "16px",
+      },
+      fontFamily: {
+        headline: ["Geist", "sans-serif"],
+        display: ["Geist", "sans-serif"],
+        body: ["Geist", "sans-serif"],
+        label: ["Geist", "sans-serif"],
+        mono: ["Geist Mono", "monospace"],
+      },
+      fontSize: {
+        "headline-xl": ["48px", { lineHeight: "56px", letterSpacing: "-0.02em", fontWeight: "700" }],
+        "headline-lg": ["32px", { lineHeight: "40px", letterSpacing: "-0.01em", fontWeight: "600" }],
+        "headline-lg-mobile": ["24px", { lineHeight: "32px", fontWeight: "600" }],
+        "title-md": ["20px", { lineHeight: "28px", fontWeight: "600" }],
+        "body-lg": ["16px", { lineHeight: "24px", fontWeight: "400" }],
+        "body-md": ["14px", { lineHeight: "20px", fontWeight: "400" }],
+        "label-md": ["12px", { lineHeight: "16px", letterSpacing: "0.05em", fontWeight: "600" }],
+        "data-mono": ["14px", { lineHeight: "20px", letterSpacing: "-0.01em", fontWeight: "500" }],
+      },
+      keyframes: {
+        fadeInUp: {
+          from: { opacity: "0", transform: "translateY(10px) scale(0.98)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
+        shimmer: {
+          "0%": { backgroundPosition: "-200% 0" },
+          "100%": { backgroundPosition: "200% 0" },
+        },
+        fadeIn: {
+          from: { opacity: "0" },
+          to: { opacity: "1" },
+        },
+        slideDown: {
+          from: { opacity: "0", transform: "translateY(-8px)" },
+          to: { opacity: "1", transform: "translateY(0)" },
+        },
+      },
+      animation: {
+        "fade-in-up": "fadeInUp 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards",
+        shimmer: "shimmer 1.5s infinite",
+        "fade-in": "fadeIn 0.15s ease-out forwards",
+        "slide-down": "slideDown 0.2s ease-out forwards",
+      },
+    },
+  },
+  plugins: [],
+}
