@@ -3,6 +3,7 @@ package com.Transitops.odoo.controller;
 import com.Transitops.odoo.dto.request.DriverRequest;
 import com.Transitops.odoo.dto.response.DriverAvailabilityResponse;
 import com.Transitops.odoo.dto.response.DriverResponse;
+import com.Transitops.odoo.dto.response.LicenseReminderResponse;
 import com.Transitops.odoo.dto.response.LicenseStatusResponse;
 import com.Transitops.odoo.enums.DriverStatus;
 import com.Transitops.odoo.service.DriverService;
@@ -81,5 +82,10 @@ public class DriverController {
     @GetMapping("/{id}/license-status")
     public ResponseEntity<LicenseStatusResponse> checkLicenseStatus(@PathVariable String id) {
         return ResponseEntity.ok(driverService.checkLicenseStatus(id));
+    }
+
+    @PostMapping("/license-reminders/send")
+    public ResponseEntity<LicenseReminderResponse> sendLicenseReminders() {
+        return ResponseEntity.ok(driverService.sendLicenseExpiryReminders());
     }
 }
