@@ -75,7 +75,8 @@ export default function Dashboard() {
   })
 
   const kpis = stats ? [
-    { label: 'Active Vehicles', value: stats.activeVehicles ?? '--', accent: 'primary', icon: 'directions_car' },
+    { label: 'Total Vehicles', value: stats.totalVehicles ?? '--', accent: 'primary', icon: 'local_shipping' },
+    { label: 'Active Vehicles', value: stats.activeVehicles ?? '--', accent: null, icon: 'directions_car' },
     { label: 'Available Vehicles', value: stats.availableVehicles ?? '--', accent: 'tertiary', icon: 'check_circle' },
     { label: 'In Maintenance', value: stats.vehiclesInMaintenance ?? '--', accent: 'error', icon: 'build' },
     { label: 'Active Trips', value: stats.activeTrips ?? '--', accent: null, icon: 'route' },
@@ -143,9 +144,9 @@ export default function Dashboard() {
 
       {/* KPI Cards Grid */}
       {loading ? (
-        <CardSkeleton count={7} />
+        <CardSkeleton count={8} />
       ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-8">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-4 mb-8">
           {kpis.map((kpi, i) => (
             <KPICard key={i} {...kpi} />
           ))}
